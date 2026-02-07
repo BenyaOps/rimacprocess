@@ -1,30 +1,85 @@
 org: benyaops
-service: servicio-rimac
+service: reto-rimac-filtrado
+
 provider:
   name: aws
   runtime: nodejs20.x
-  region: us-east-1 # Cambia esto a tu región
+  region: us-east-1
   iam:
     role:
       statements:
         - Effect: Allow
-          Action:
-            - dynamodb:PutItem
-            - dynamodb:GetItem
-          # Usamos el ARN de tu tabla existente
-          Resource: "arn:aws:dynamodb:us-east-1:851725266862:table/RimacTable"
+          Action: ["sns:Publish"]
+          Resource: !Ref TopicMultipais
 
 functions:
-  crearUsuario:
-    handler: handler.crearUsuario
+  publicador:
+    handler: handler.publicador
     events:
       - httpApi:
-          path: /users2
+          path: /registrar
           method: post
+    environment:
+      TOPIC_ARN: !Ref TopicMultipais
 
-  obtenerUsuario:
-    handler: handler.obtenerUsuario
-    events:
-      - httpApi:
-          path: /users2/{userId}
-          method: get
+resources:
+  Resources:
+    # 1. El Topic
+    TopicMultipais:
+      Type: AWS::SNS::Topic
+      Properties:
+        TopicName: TopicMultipaisRimac
+
+    # 2. Las Colas
+    ColaPE:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: sqs_pe
+
+    ColaCL:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: sqs_cl
+
+    # 3. LAS SUSCRIPCIONES CON FILTRO (La clave del reto)
+    SuscripcionPE:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Protocol: sqs
+        TopicArn: !Ref TopicMultipais
+        Endpoint: !GetAtt ColaPE.Arn
+        # AQUÍ ESTÁ EL FILTRO:
+        FilterPolicy:
+          countryISO: ["pe"]
+
+    SuscripcionCL:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Protocol: sqs
+        TopicArn: !Ref TopicMultipais
+        Endpoint: !GetAtt ColaCL.Arn
+        FilterPolicy:
+          countryISO: ["cl"]
+
+    # Suscripción de Email (Sin filtro para recibir todo)
+    SuscripcionEmail:
+      Type: AWS::SNS::Subscription
+      Properties:
+        Protocol: email
+        TopicArn: !Ref TopicMultipais
+        Endpoint: "tu-email@ejemplo.com"
+
+    # Permisos para que SNS pueda escribir en ambas colas (Importante)
+    SqsPolicy:
+      Type: AWS::SQS::QueuePolicy
+      Properties:
+        Queues: [ !Ref ColaPE, !Ref ColaCL ]
+        PolicyDocument:
+          Statement:
+            - Effect: Allow
+              Principal: "*"
+              Action: "sqs:SendMessage"
+              Resource: "*"
+              Condition:
+                ArnEquals:
+                  aws:SourceArn: !Ref TopicMultipais

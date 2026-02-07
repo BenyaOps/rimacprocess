@@ -1,28 +1,30 @@
-import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { DynamoDBDocumentClient, PutItemCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
+import { SNSClient, PublishCommand } from "@aws-sdk/client-sns";
+const snsClient = new SNSClient({});
 
-const client = new DynamoDBClient({});
-const docClient = DynamoDBDocumentClient.from(client);
-const TABLE_NAME = "RimacTable";
-
-export const crearUsuario = async (event) => {
+// LAMBDA A: Solo publica en SNS
+export const publicador = async (event) => {
     const body = JSON.parse(event.body);
-    const params = {
-        TableName: TABLE_NAME,
-        Item: { ...body, createdAt: new Date().toISOString() }
+    
+    await snsClient.send(new PublishCommand({
+        TopicArn: process.env.TOPIC_ARN,
+        Message: JSON.stringify(body),
+        Subject: "Nuevo Evento de Usuario"
+    }));
+
+    return { 
+        statusCode: 200, 
+        body: JSON.stringify({ mensaje: "Evento publicado en SNS y distribuido a SQS" }) 
     };
-    await docClient.send(new PutItemCommand(params));
-    return { statusCode: 201, body: JSON.stringify({ message: "Creado" }) };
 };
 
-export const obtenerUsuario = async (event) => {
-    const { userId } = event.pathParameters;
-    const params = {
-        TableName: TABLE_NAME,
-        Key: { userId }
-    };
-    const { Item } = await docClient.send(new GetCommand(params));
-    return Item 
-        ? { statusCode: 200, body: JSON.stringify(Item) }
-        : { statusCode: 404, body: JSON.stringify({ message: "No encontrado" }) };
+// LAMBDA B: Procesa lo que llega de la cola
+export const worker = async (event) => {
+    for (const record of event.Records) {
+        // OJO: SNS mete su mensaje dentro del campo 'body' de SQS
+        const snsMessage = JSON.parse(record.body);
+        const userData = JSON.parse(snsMessage.Message);
+        
+        console.log("LOGISTICA: Procesando pedido para el usuario:", userData.nombre);
+        // Aquí podrías hacer un fetch a una API externa o guardar en DB
+    }
 };
