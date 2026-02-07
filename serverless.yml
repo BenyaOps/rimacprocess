@@ -67,7 +67,7 @@ resources:
       Properties:
         Protocol: email
         TopicArn: !Ref TopicMultipais
-        Endpoint: "tu-email@ejemplo.com"
+        Endpoint: "benyaroot@gmail.com"
 
     # Permisos para que SNS pueda escribir en ambas colas (Importante)
     SqsPolicy:

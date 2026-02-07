@@ -5,7 +5,7 @@
     "serviceConfigFileName": "serverless.yml",
     "service": {
       "org": "benyaops",
-      "service": "servicio-rimac",
+      "service": "reto-rimac-filtrado",
       "provider": {
         "name": "aws",
         "runtime": "nodejs20.x",
@@ -16,10 +16,11 @@
               {
                 "Effect": "Allow",
                 "Action": [
-                  "dynamodb:PutItem",
-                  "dynamodb:GetItem"
+                  "sns:Publish"
                 ],
-                "Resource": "arn:aws:dynamodb:us-east-1:851725266862:table/RimacTable"
+                "Resource": {
+                  "Ref": "TopicMultipais"
+                }
               }
             ]
           }
@@ -30,16 +31,10 @@
           "AWSTemplateFormatVersion": "2010-09-09",
           "Description": "The AWS CloudFormation template for this Serverless application",
           "Resources": {
-            "CrearUsuarioLogGroup": {
+            "PublicadorLogGroup": {
               "Type": "AWS::Logs::LogGroup",
               "Properties": {
-                "LogGroupName": "/aws/lambda/servicio-rimac-dev-crearUsuario"
-              }
-            },
-            "ObtenerUsuarioLogGroup": {
-              "Type": "AWS::Logs::LogGroup",
-              "Properties": {
-                "LogGroupName": "/aws/lambda/servicio-rimac-dev-obtenerUsuario"
+                "LogGroupName": "/aws/lambda/reto-rimac-filtrado-dev-publicador"
               }
             },
             "IamRoleLambdaExecution": {
@@ -67,7 +62,7 @@
                       "Fn::Join": [
                         "-",
                         [
-                          "servicio-rimac",
+                          "reto-rimac-filtrado",
                           "dev",
                           "lambda"
                         ]
@@ -85,7 +80,7 @@
                           ],
                           "Resource": [
                             {
-                              "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/servicio-rimac-dev*:*"
+                              "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/reto-rimac-filtrado-dev*:*"
                             }
                           ]
                         },
@@ -96,17 +91,18 @@
                           ],
                           "Resource": [
                             {
-                              "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/servicio-rimac-dev*:*:*"
+                              "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/reto-rimac-filtrado-dev*:*:*"
                             }
                           ]
                         },
                         {
                           "Effect": "Allow",
                           "Action": [
-                            "dynamodb:PutItem",
-                            "dynamodb:GetItem"
+                            "sns:Publish"
                           ],
-                          "Resource": "arn:aws:dynamodb:us-east-1:851725266862:table/RimacTable"
+                          "Resource": {
+                            "Ref": "TopicMultipais"
+                          }
                         }
                       ]
                     }
@@ -117,7 +113,7 @@
                   "Fn::Join": [
                     "-",
                     [
-                      "servicio-rimac",
+                      "reto-rimac-filtrado",
                       "dev",
                       {
                         "Ref": "AWS::Region"
@@ -128,18 +124,25 @@
                 }
               }
             },
-            "CrearUsuarioLambdaFunction": {
+            "PublicadorLambdaFunction": {
               "Type": "AWS::Lambda::Function",
               "Properties": {
                 "Code": {
                   "S3Bucket": "serverless-framework-deployments-us-east-1-a596bce8-6931",
-                  "S3Key": "serverless/servicio-rimac/dev/1770440964998-2026-02-07T05:09:24.998Z/servicio-rimac.zip"
+                  "S3Key": "serverless/reto-rimac-filtrado/dev/1770494201146-2026-02-07T19:56:41.146Z/reto-rimac-filtrado.zip"
                 },
-                "Handler": "handler.crearUsuario",
+                "Handler": "handler.publicador",
                 "Runtime": "nodejs20.x",
-                "FunctionName": "servicio-rimac-dev-crearUsuario",
+                "FunctionName": "reto-rimac-filtrado-dev-publicador",
                 "MemorySize": 1024,
                 "Timeout": 6,
+                "Environment": {
+                  "Variables": {
+                    "TOPIC_ARN": {
+                      "Ref": "TopicMultipais"
+                    }
+                  }
+                },
                 "Role": {
                   "Fn::GetAtt": [
                     "IamRoleLambdaExecution",
@@ -148,56 +151,23 @@
                 }
               },
               "DependsOn": [
-                "CrearUsuarioLogGroup"
+                "PublicadorLogGroup"
               ]
             },
-            "ObtenerUsuarioLambdaFunction": {
-              "Type": "AWS::Lambda::Function",
-              "Properties": {
-                "Code": {
-                  "S3Bucket": "serverless-framework-deployments-us-east-1-a596bce8-6931",
-                  "S3Key": "serverless/servicio-rimac/dev/1770440964998-2026-02-07T05:09:24.998Z/servicio-rimac.zip"
-                },
-                "Handler": "handler.obtenerUsuario",
-                "Runtime": "nodejs20.x",
-                "FunctionName": "servicio-rimac-dev-obtenerUsuario",
-                "MemorySize": 1024,
-                "Timeout": 6,
-                "Role": {
-                  "Fn::GetAtt": [
-                    "IamRoleLambdaExecution",
-                    "Arn"
-                  ]
-                }
-              },
-              "DependsOn": [
-                "ObtenerUsuarioLogGroup"
-              ]
-            },
-            "CrearUsuarioLambdaVersionwHW6Ju4XqbUVDcqkDu3b0ZrYIFygdmllUOtZQUQ": {
+            "PublicadorLambdaVersion3rj4AUoDI102gw4pua3C0icfPBv6sIDBnu8UiXXV8": {
               "Type": "AWS::Lambda::Version",
               "DeletionPolicy": "Retain",
               "Properties": {
                 "FunctionName": {
-                  "Ref": "CrearUsuarioLambdaFunction"
+                  "Ref": "PublicadorLambdaFunction"
                 },
-                "CodeSha256": "yDVWbtHm6P9qoY3HPELjzgnNPIOj42CEmblY6dFvZI0="
-              }
-            },
-            "ObtenerUsuarioLambdaVersion7c8xHVrOvEUMyHDuXAyhauXXejIsSmrZUrRqVuNAuE": {
-              "Type": "AWS::Lambda::Version",
-              "DeletionPolicy": "Retain",
-              "Properties": {
-                "FunctionName": {
-                  "Ref": "ObtenerUsuarioLambdaFunction"
-                },
-                "CodeSha256": "yDVWbtHm6P9qoY3HPELjzgnNPIOj42CEmblY6dFvZI0="
+                "CodeSha256": "wG/XAUJQt4/vZ19J5UKzppXcoGq47hlCi8qbCawC4aU="
               }
             },
             "HttpApi": {
               "Type": "AWS::ApiGatewayV2::Api",
               "Properties": {
-                "Name": "dev-servicio-rimac",
+                "Name": "dev-reto-rimac-filtrado",
                 "ProtocolType": "HTTP"
               }
             },
@@ -214,12 +184,12 @@
                 }
               }
             },
-            "CrearUsuarioLambdaPermissionHttpApi": {
+            "PublicadorLambdaPermissionHttpApi": {
               "Type": "AWS::Lambda::Permission",
               "Properties": {
                 "FunctionName": {
                   "Fn::GetAtt": [
-                    "CrearUsuarioLambdaFunction",
+                    "PublicadorLambdaFunction",
                     "Arn"
                   ]
                 },
@@ -251,7 +221,7 @@
                 }
               }
             },
-            "HttpApiIntegrationCrearUsuario": {
+            "HttpApiIntegrationPublicador": {
               "Type": "AWS::ApiGatewayV2::Integration",
               "Properties": {
                 "ApiId": {
@@ -260,7 +230,7 @@
                 "IntegrationType": "AWS_PROXY",
                 "IntegrationUri": {
                   "Fn::GetAtt": [
-                    "CrearUsuarioLambdaFunction",
+                    "PublicadorLambdaFunction",
                     "Arn"
                   ]
                 },
@@ -268,126 +238,140 @@
                 "TimeoutInMillis": 30000
               }
             },
-            "HttpApiRoutePostUsers2": {
+            "HttpApiRoutePostRegistrar": {
               "Type": "AWS::ApiGatewayV2::Route",
               "Properties": {
                 "ApiId": {
                   "Ref": "HttpApi"
                 },
-                "RouteKey": "POST /users2",
+                "RouteKey": "POST /registrar",
                 "Target": {
                   "Fn::Join": [
                     "/",
                     [
                       "integrations",
                       {
-                        "Ref": "HttpApiIntegrationCrearUsuario"
+                        "Ref": "HttpApiIntegrationPublicador"
                       }
                     ]
                   ]
                 }
               },
-              "DependsOn": "HttpApiIntegrationCrearUsuario"
+              "DependsOn": "HttpApiIntegrationPublicador"
             },
-            "ObtenerUsuarioLambdaPermissionHttpApi": {
-              "Type": "AWS::Lambda::Permission",
+            "TopicMultipais": {
+              "Type": "AWS::SNS::Topic",
               "Properties": {
-                "FunctionName": {
+                "TopicName": "TopicMultipaisRimac"
+              }
+            },
+            "ColaPE": {
+              "Type": "AWS::SQS::Queue",
+              "Properties": {
+                "QueueName": "sqs_pe"
+              }
+            },
+            "ColaCL": {
+              "Type": "AWS::SQS::Queue",
+              "Properties": {
+                "QueueName": "sqs_cl"
+              }
+            },
+            "SuscripcionPE": {
+              "Type": "AWS::SNS::Subscription",
+              "Properties": {
+                "Protocol": "sqs",
+                "TopicArn": {
+                  "Ref": "TopicMultipais"
+                },
+                "Endpoint": {
                   "Fn::GetAtt": [
-                    "ObtenerUsuarioLambdaFunction",
+                    "ColaPE",
                     "Arn"
                   ]
                 },
-                "Action": "lambda:InvokeFunction",
-                "Principal": "apigateway.amazonaws.com",
-                "SourceArn": {
-                  "Fn::Join": [
-                    "",
-                    [
-                      "arn:",
-                      {
-                        "Ref": "AWS::Partition"
-                      },
-                      ":execute-api:",
-                      {
-                        "Ref": "AWS::Region"
-                      },
-                      ":",
-                      {
-                        "Ref": "AWS::AccountId"
-                      },
-                      ":",
-                      {
-                        "Ref": "HttpApi"
-                      },
-                      "/*"
-                    ]
+                "FilterPolicy": {
+                  "countryISO": [
+                    "pe"
                   ]
                 }
               }
             },
-            "HttpApiIntegrationObtenerUsuario": {
-              "Type": "AWS::ApiGatewayV2::Integration",
+            "SuscripcionCL": {
+              "Type": "AWS::SNS::Subscription",
               "Properties": {
-                "ApiId": {
-                  "Ref": "HttpApi"
+                "Protocol": "sqs",
+                "TopicArn": {
+                  "Ref": "TopicMultipais"
                 },
-                "IntegrationType": "AWS_PROXY",
-                "IntegrationUri": {
+                "Endpoint": {
                   "Fn::GetAtt": [
-                    "ObtenerUsuarioLambdaFunction",
+                    "ColaCL",
                     "Arn"
                   ]
                 },
-                "PayloadFormatVersion": "2.0",
-                "TimeoutInMillis": 30000
+                "FilterPolicy": {
+                  "countryISO": [
+                    "cl"
+                  ]
+                }
               }
             },
-            "HttpApiRouteGetUsers2UseridVar": {
-              "Type": "AWS::ApiGatewayV2::Route",
+            "SuscripcionEmail": {
+              "Type": "AWS::SNS::Subscription",
               "Properties": {
-                "ApiId": {
-                  "Ref": "HttpApi"
+                "Protocol": "email",
+                "TopicArn": {
+                  "Ref": "TopicMultipais"
                 },
-                "RouteKey": "GET /users2/{userId}",
-                "Target": {
-                  "Fn::Join": [
-                    "/",
-                    [
-                      "integrations",
-                      {
-                        "Ref": "HttpApiIntegrationObtenerUsuario"
+                "Endpoint": "benyaroot@gmail.com"
+              }
+            },
+            "SqsPolicy": {
+              "Type": "AWS::SQS::QueuePolicy",
+              "Properties": {
+                "Queues": [
+                  {
+                    "Ref": "ColaPE"
+                  },
+                  {
+                    "Ref": "ColaCL"
+                  }
+                ],
+                "PolicyDocument": {
+                  "Statement": [
+                    {
+                      "Effect": "Allow",
+                      "Principal": "*",
+                      "Action": "sqs:SendMessage",
+                      "Resource": "*",
+                      "Condition": {
+                        "ArnEquals": {
+                          "aws:SourceArn": {
+                            "Ref": "TopicMultipais"
+                          }
+                        }
                       }
-                    ]
+                    }
                   ]
                 }
-              },
-              "DependsOn": "HttpApiIntegrationObtenerUsuario"
+              }
             }
           },
           "Outputs": {
             "ServerlessDeploymentBucketName": {
               "Value": "serverless-framework-deployments-us-east-1-a596bce8-6931",
               "Export": {
-                "Name": "sls-servicio-rimac-dev-ServerlessDeploymentBucketName"
+                "Name": "sls-reto-rimac-filtrado-dev-ServerlessDeploymentBucketName"
               }
             },
-            "CrearUsuarioLambdaFunctionQualifiedArn": {
+            "PublicadorLambdaFunctionQualifiedArn": {
               "Description": "Current Lambda function version",
               "Value": {
-                "Ref": "CrearUsuarioLambdaVersionwHW6Ju4XqbUVDcqkDu3b0ZrYIFygdmllUOtZQUQ"
+                "Ref": "PublicadorLambdaVersion3rj4AUoDI102gw4pua3C0icfPBv6sIDBnu8UiXXV8"
               },
               "Export": {
-                "Name": "sls-servicio-rimac-dev-CrearUsuarioLambdaFunctionQualifiedArn"
-              }
-            },
-            "ObtenerUsuarioLambdaFunctionQualifiedArn": {
-              "Description": "Current Lambda function version",
-              "Value": {
-                "Ref": "ObtenerUsuarioLambdaVersion7c8xHVrOvEUMyHDuXAyhauXXejIsSmrZUrRqVuNAuE"
-              },
-              "Export": {
-                "Name": "sls-servicio-rimac-dev-ObtenerUsuarioLambdaFunctionQualifiedArn"
+                "Name": "sls-reto-rimac-filtrado-dev-PublicadorLambdaFunctionQualifiedArn"
               }
             },
             "HttpApiId": {
@@ -396,7 +380,7 @@
                 "Ref": "HttpApi"
               },
               "Export": {
-                "Name": "sls-servicio-rimac-dev-HttpApiId"
+                "Name": "sls-reto-rimac-filtrado-dev-HttpApiId"
               }
             },
             "HttpApiUrl": {
@@ -421,7 +405,7 @@
                 ]
               },
               "Export": {
-                "Name": "sls-servicio-rimac-dev-HttpApiUrl"
+                "Name": "sls-reto-rimac-filtrado-dev-HttpApiUrl"
               }
             }
           }
@@ -429,46 +413,134 @@
         "vpc": {}
       },
       "functions": {
-        "crearUsuario": {
-          "handler": "handler.crearUsuario",
+        "publicador": {
+          "handler": "handler.publicador",
           "events": [
             {
               "httpApi": {
-                "path": "/users2",
+                "path": "/registrar",
                 "method": "post"
               },
               "resolvedMethod": "POST",
-              "resolvedPath": "/users2"
+              "resolvedPath": "/registrar"
             }
           ],
-          "name": "servicio-rimac-dev-crearUsuario",
+          "environment": {
+            "TOPIC_ARN": {
+              "Ref": "TopicMultipais"
+            }
+          },
+          "name": "reto-rimac-filtrado-dev-publicador",
           "package": {},
           "memory": 1024,
           "timeout": 6,
           "runtime": "nodejs20.x",
           "vpc": {},
-          "versionLogicalId": "CrearUsuarioLambdaVersionwHW6Ju4XqbUVDcqkDu3b0ZrYIFygdmllUOtZQUQ"
-        },
-        "obtenerUsuario": {
-          "handler": "handler.obtenerUsuario",
-          "events": [
-            {
-              "httpApi": {
-                "path": "/users2/{userId}",
-                "method": "get"
-              },
-              "resolvedMethod": "GET",
-              "resolvedPath": "/users2/{userId}"
-            }
-          ],
-          "name": "servicio-rimac-dev-obtenerUsuario",
-          "package": {},
-          "memory": 1024,
-          "timeout": 6,
-          "runtime": "nodejs20.x",
-          "vpc": {},
-          "versionLogicalId": "ObtenerUsuarioLambdaVersion7c8xHVrOvEUMyHDuXAyhauXXejIsSmrZUrRqVuNAuE"
+          "versionLogicalId": "PublicadorLambdaVersion3rj4AUoDI102gw4pua3C0icfPBv6sIDBnu8UiXXV8"
         }
+      },
+      "resources": {
+        "Resources": {
+          "TopicMultipais": {
+            "Type": "AWS::SNS::Topic",
+            "Properties": {
+              "TopicName": "TopicMultipaisRimac"
+            }
+          },
+          "ColaPE": {
+            "Type": "AWS::SQS::Queue",
+            "Properties": {
+              "QueueName": "sqs_pe"
+            }
+          },
+          "ColaCL": {
+            "Type": "AWS::SQS::Queue",
+            "Properties": {
+              "QueueName": "sqs_cl"
+            }
+          },
+          "SuscripcionPE": {
+            "Type": "AWS::SNS::Subscription",
+            "Properties": {
+              "Protocol": "sqs",
+              "TopicArn": {
+                "Ref": "TopicMultipais"
+              },
+              "Endpoint": {
+                "Fn::GetAtt": [
+                  "ColaPE",
+                  "Arn"
+                ]
+              },
+              "FilterPolicy": {
+                "countryISO": [
+                  "pe"
+                ]
+              }
+            }
+          },
+          "SuscripcionCL": {
+            "Type": "AWS::SNS::Subscription",
+            "Properties": {
+              "Protocol": "sqs",
+              "TopicArn": {
+                "Ref": "TopicMultipais"
+              },
+              "Endpoint": {
+                "Fn::GetAtt": [
+                  "ColaCL",
+                  "Arn"
+                ]
+              },
+              "FilterPolicy": {
+                "countryISO": [
+                  "cl"
+                ]
+              }
+            }
+          },
+          "SuscripcionEmail": {
+            "Type": "AWS::SNS::Subscription",
+            "Properties": {
+              "Protocol": "email",
+              "TopicArn": {
+                "Ref": "TopicMultipais"
+              },
+              "Endpoint": "benyaroot@gmail.com"
+            }
+          },
+          "SqsPolicy": {
+            "Type": "AWS::SQS::QueuePolicy",
+            "Properties": {
+              "Queues": [
+                {
+                  "Ref": "ColaPE"
+                },
+                {
+                  "Ref": "ColaCL"
+                }
+              ],
+              "PolicyDocument": {
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Principal": "*",
+                    "Action": "sqs:SendMessage",
+                    "Resource": "*",
+                    "Condition": {
+                      "ArnEquals": {
+                        "aws:SourceArn": {
+                          "Ref": "TopicMultipais"
+                        }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "Outputs": {}
       }
     },
     "provider": {
@@ -481,10 +553,11 @@
             {
               "Effect": "Allow",
               "Action": [
-                "dynamodb:PutItem",
-                "dynamodb:GetItem"
+                "sns:Publish"
               ],
-              "Resource": "arn:aws:dynamodb:us-east-1:851725266862:table/RimacTable"
+              "Resource": {
+                "Ref": "TopicMultipais"
+              }
             }
           ]
         }
@@ -495,16 +568,10 @@
         "AWSTemplateFormatVersion": "2010-09-09",
         "Description": "The AWS CloudFormation template for this Serverless application",
         "Resources": {
-          "CrearUsuarioLogGroup": {
+          "PublicadorLogGroup": {
             "Type": "AWS::Logs::LogGroup",
             "Properties": {
-              "LogGroupName": "/aws/lambda/servicio-rimac-dev-crearUsuario"
-            }
-          },
-          "ObtenerUsuarioLogGroup": {
-            "Type": "AWS::Logs::LogGroup",
-            "Properties": {
-              "LogGroupName": "/aws/lambda/servicio-rimac-dev-obtenerUsuario"
+              "LogGroupName": "/aws/lambda/reto-rimac-filtrado-dev-publicador"
             }
           },
           "IamRoleLambdaExecution": {
@@ -532,7 +599,7 @@
                     "Fn::Join": [
                       "-",
                       [
-                        "servicio-rimac",
+                        "reto-rimac-filtrado",
                         "dev",
                         "lambda"
                       ]
@@ -550,7 +617,7 @@
                         ],
                         "Resource": [
                           {
-                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/servicio-rimac-dev*:*"
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/reto-rimac-filtrado-dev*:*"
                           }
                         ]
                       },
@@ -561,17 +628,18 @@
                         ],
                         "Resource": [
                           {
-                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/servicio-rimac-dev*:*:*"
+                            "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/reto-rimac-filtrado-dev*:*:*"
                           }
                         ]
                       },
                       {
                         "Effect": "Allow",
                         "Action": [
-                          "dynamodb:PutItem",
-                          "dynamodb:GetItem"
+                          "sns:Publish"
                         ],
-                        "Resource": "arn:aws:dynamodb:us-east-1:851725266862:table/RimacTable"
+                        "Resource": {
+                          "Ref": "TopicMultipais"
+                        }
                       }
                     ]
                   }
@@ -582,7 +650,7 @@
                 "Fn::Join": [
                   "-",
                   [
-                    "servicio-rimac",
+                    "reto-rimac-filtrado",
                     "dev",
                     {
                       "Ref": "AWS::Region"
@@ -593,18 +661,25 @@
               }
             }
           },
-          "CrearUsuarioLambdaFunction": {
+          "PublicadorLambdaFunction": {
             "Type": "AWS::Lambda::Function",
             "Properties": {
               "Code": {
                 "S3Bucket": "serverless-framework-deployments-us-east-1-a596bce8-6931",
-                "S3Key": "serverless/servicio-rimac/dev/1770440964998-2026-02-07T05:09:24.998Z/servicio-rimac.zip"
+                "S3Key": "serverless/reto-rimac-filtrado/dev/1770494201146-2026-02-07T19:56:41.146Z/reto-rimac-filtrado.zip"
               },
-              "Handler": "handler.crearUsuario",
+              "Handler": "handler.publicador",
               "Runtime": "nodejs20.x",
-              "FunctionName": "servicio-rimac-dev-crearUsuario",
+              "FunctionName": "reto-rimac-filtrado-dev-publicador",
               "MemorySize": 1024,
               "Timeout": 6,
+              "Environment": {
+                "Variables": {
+                  "TOPIC_ARN": {
+                    "Ref": "TopicMultipais"
+                  }
+                }
+              },
               "Role": {
                 "Fn::GetAtt": [
                   "IamRoleLambdaExecution",
@@ -613,56 +688,23 @@
               }
             },
             "DependsOn": [
-              "CrearUsuarioLogGroup"
+              "PublicadorLogGroup"
             ]
           },
-          "ObtenerUsuarioLambdaFunction": {
-            "Type": "AWS::Lambda::Function",
-            "Properties": {
-              "Code": {
-                "S3Bucket": "serverless-framework-deployments-us-east-1-a596bce8-6931",
-                "S3Key": "serverless/servicio-rimac/dev/1770440964998-2026-02-07T05:09:24.998Z/servicio-rimac.zip"
-              },
-              "Handler": "handler.obtenerUsuario",
-              "Runtime": "nodejs20.x",
-              "FunctionName": "servicio-rimac-dev-obtenerUsuario",
-              "MemorySize": 1024,
-              "Timeout": 6,
-              "Role": {
-                "Fn::GetAtt": [
-                  "IamRoleLambdaExecution",
-                  "Arn"
-                ]
-              }
-            },
-            "DependsOn": [
-              "ObtenerUsuarioLogGroup"
-            ]
-          },
-          "CrearUsuarioLambdaVersionwHW6Ju4XqbUVDcqkDu3b0ZrYIFygdmllUOtZQUQ": {
+          "PublicadorLambdaVersion3rj4AUoDI102gw4pua3C0icfPBv6sIDBnu8UiXXV8": {
             "Type": "AWS::Lambda::Version",
             "DeletionPolicy": "Retain",
             "Properties": {
               "FunctionName": {
-                "Ref": "CrearUsuarioLambdaFunction"
+                "Ref": "PublicadorLambdaFunction"
               },
-              "CodeSha256": "yDVWbtHm6P9qoY3HPELjzgnNPIOj42CEmblY6dFvZI0="
-            }
-          },
-          "ObtenerUsuarioLambdaVersion7c8xHVrOvEUMyHDuXAyhauXXejIsSmrZUrRqVuNAuE": {
-            "Type": "AWS::Lambda::Version",
-            "DeletionPolicy": "Retain",
-            "Properties": {
-              "FunctionName": {
-                "Ref": "ObtenerUsuarioLambdaFunction"
-              },
-              "CodeSha256": "yDVWbtHm6P9qoY3HPELjzgnNPIOj42CEmblY6dFvZI0="
+              "CodeSha256": "wG/XAUJQt4/vZ19J5UKzppXcoGq47hlCi8qbCawC4aU="
             }
           },
           "HttpApi": {
             "Type": "AWS::ApiGatewayV2::Api",
             "Properties": {
-              "Name": "dev-servicio-rimac",
+              "Name": "dev-reto-rimac-filtrado",
               "ProtocolType": "HTTP"
             }
           },
@@ -679,12 +721,12 @@
               }
             }
           },
-          "CrearUsuarioLambdaPermissionHttpApi": {
+          "PublicadorLambdaPermissionHttpApi": {
             "Type": "AWS::Lambda::Permission",
             "Properties": {
               "FunctionName": {
                 "Fn::GetAtt": [
-                  "CrearUsuarioLambdaFunction",
+                  "PublicadorLambdaFunction",
                   "Arn"
                 ]
               },
@@ -716,7 +758,7 @@
               }
             }
           },
-          "HttpApiIntegrationCrearUsuario": {
+          "HttpApiIntegrationPublicador": {
             "Type": "AWS::ApiGatewayV2::Integration",
             "Properties": {
               "ApiId": {
@@ -725,7 +767,7 @@
               "IntegrationType": "AWS_PROXY",
               "IntegrationUri": {
                 "Fn::GetAtt": [
-                  "CrearUsuarioLambdaFunction",
+                  "PublicadorLambdaFunction",
                   "Arn"
                 ]
               },
@@ -733,126 +775,140 @@
               "TimeoutInMillis": 30000
             }
           },
-          "HttpApiRoutePostUsers2": {
+          "HttpApiRoutePostRegistrar": {
             "Type": "AWS::ApiGatewayV2::Route",
             "Properties": {
               "ApiId": {
                 "Ref": "HttpApi"
               },
-              "RouteKey": "POST /users2",
+              "RouteKey": "POST /registrar",
               "Target": {
                 "Fn::Join": [
                   "/",
                   [
                     "integrations",
                     {
-                      "Ref": "HttpApiIntegrationCrearUsuario"
+                      "Ref": "HttpApiIntegrationPublicador"
                     }
                   ]
                 ]
               }
             },
-            "DependsOn": "HttpApiIntegrationCrearUsuario"
+            "DependsOn": "HttpApiIntegrationPublicador"
           },
-          "ObtenerUsuarioLambdaPermissionHttpApi": {
-            "Type": "AWS::Lambda::Permission",
+          "TopicMultipais": {
+            "Type": "AWS::SNS::Topic",
             "Properties": {
-              "FunctionName": {
+              "TopicName": "TopicMultipaisRimac"
+            }
+          },
+          "ColaPE": {
+            "Type": "AWS::SQS::Queue",
+            "Properties": {
+              "QueueName": "sqs_pe"
+            }
+          },
+          "ColaCL": {
+            "Type": "AWS::SQS::Queue",
+            "Properties": {
+              "QueueName": "sqs_cl"
+            }
+          },
+          "SuscripcionPE": {
+            "Type": "AWS::SNS::Subscription",
+            "Properties": {
+              "Protocol": "sqs",
+              "TopicArn": {
+                "Ref": "TopicMultipais"
+              },
+              "Endpoint": {
                 "Fn::GetAtt": [
-                  "ObtenerUsuarioLambdaFunction",
+                  "ColaPE",
                   "Arn"
                 ]
               },
-              "Action": "lambda:InvokeFunction",
-              "Principal": "apigateway.amazonaws.com",
-              "SourceArn": {
-                "Fn::Join": [
-                  "",
-                  [
-                    "arn:",
-                    {
-                      "Ref": "AWS::Partition"
-                    },
-                    ":execute-api:",
-                    {
-                      "Ref": "AWS::Region"
-                    },
-                    ":",
-                    {
-                      "Ref": "AWS::AccountId"
-                    },
-                    ":",
-                    {
-                      "Ref": "HttpApi"
-                    },
-                    "/*"
-                  ]
+              "FilterPolicy": {
+                "countryISO": [
+                  "pe"
                 ]
               }
             }
           },
-          "HttpApiIntegrationObtenerUsuario": {
-            "Type": "AWS::ApiGatewayV2::Integration",
+          "SuscripcionCL": {
+            "Type": "AWS::SNS::Subscription",
             "Properties": {
-              "ApiId": {
-                "Ref": "HttpApi"
+              "Protocol": "sqs",
+              "TopicArn": {
+                "Ref": "TopicMultipais"
               },
-              "IntegrationType": "AWS_PROXY",
-              "IntegrationUri": {
+              "Endpoint": {
                 "Fn::GetAtt": [
-                  "ObtenerUsuarioLambdaFunction",
+                  "ColaCL",
                   "Arn"
                 ]
               },
-              "PayloadFormatVersion": "2.0",
-              "TimeoutInMillis": 30000
+              "FilterPolicy": {
+                "countryISO": [
+                  "cl"
+                ]
+              }
             }
           },
-          "HttpApiRouteGetUsers2UseridVar": {
-            "Type": "AWS::ApiGatewayV2::Route",
+          "SuscripcionEmail": {
+            "Type": "AWS::SNS::Subscription",
             "Properties": {
-              "ApiId": {
-                "Ref": "HttpApi"
+              "Protocol": "email",
+              "TopicArn": {
+                "Ref": "TopicMultipais"
               },
-              "RouteKey": "GET /users2/{userId}",
-              "Target": {
-                "Fn::Join": [
-                  "/",
-                  [
-                    "integrations",
-                    {
-                      "Ref": "HttpApiIntegrationObtenerUsuario"
+              "Endpoint": "benyaroot@gmail.com"
+            }
+          },
+          "SqsPolicy": {
+            "Type": "AWS::SQS::QueuePolicy",
+            "Properties": {
+              "Queues": [
+                {
+                  "Ref": "ColaPE"
+                },
+                {
+                  "Ref": "ColaCL"
+                }
+              ],
+              "PolicyDocument": {
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Principal": "*",
+                    "Action": "sqs:SendMessage",
+                    "Resource": "*",
+                    "Condition": {
+                      "ArnEquals": {
+                        "aws:SourceArn": {
+                          "Ref": "TopicMultipais"
+                        }
+                      }
                     }
-                  ]
+                  }
                 ]
               }
-            },
-            "DependsOn": "HttpApiIntegrationObtenerUsuario"
+            }
           }
         },
         "Outputs": {
           "ServerlessDeploymentBucketName": {
             "Value": "serverless-framework-deployments-us-east-1-a596bce8-6931",
             "Export": {
-              "Name": "sls-servicio-rimac-dev-ServerlessDeploymentBucketName"
+              "Name": "sls-reto-rimac-filtrado-dev-ServerlessDeploymentBucketName"
             }
           },
-          "CrearUsuarioLambdaFunctionQualifiedArn": {
+          "PublicadorLambdaFunctionQualifiedArn": {
             "Description": "Current Lambda function version",
             "Value": {
-              "Ref": "CrearUsuarioLambdaVersionwHW6Ju4XqbUVDcqkDu3b0ZrYIFygdmllUOtZQUQ"
+              "Ref": "PublicadorLambdaVersion3rj4AUoDI102gw4pua3C0icfPBv6sIDBnu8UiXXV8"
             },
             "Export": {
-              "Name": "sls-servicio-rimac-dev-CrearUsuarioLambdaFunctionQualifiedArn"
-            }
-          },
-          "ObtenerUsuarioLambdaFunctionQualifiedArn": {
-            "Description": "Current Lambda function version",
-            "Value": {
-              "Ref": "ObtenerUsuarioLambdaVersion7c8xHVrOvEUMyHDuXAyhauXXejIsSmrZUrRqVuNAuE"
-            },
-            "Export": {
-              "Name": "sls-servicio-rimac-dev-ObtenerUsuarioLambdaFunctionQualifiedArn"
+              "Name": "sls-reto-rimac-filtrado-dev-PublicadorLambdaFunctionQualifiedArn"
             }
           },
           "HttpApiId": {
@@ -861,7 +917,7 @@
               "Ref": "HttpApi"
             },
             "Export": {
-              "Name": "sls-servicio-rimac-dev-HttpApiId"
+              "Name": "sls-reto-rimac-filtrado-dev-HttpApiId"
             }
           },
           "HttpApiUrl": {
@@ -886,7 +942,7 @@
               ]
             },
             "Export": {
-              "Name": "sls-servicio-rimac-dev-HttpApiUrl"
+              "Name": "sls-reto-rimac-filtrado-dev-HttpApiUrl"
             }
           }
         }
@@ -902,7 +958,7 @@
       "serviceProvider": null,
       "instanceParameters": null
     },
-    "serviceRawFile": "org: benyaops\nservice: servicio-rimac\nprovider:\n  name: aws\n  runtime: nodejs20.x\n  region: us-east-1 # Cambia esto a tu región\n  iam:\n    role:\n      statements:\n        - Effect: Allow\n          Action:\n            - dynamodb:PutItem\n            - dynamodb:GetItem\n          # Usamos el ARN de tu tabla existente\n          Resource: \"arn:aws:dynamodb:us-east-1:851725266862:table/RimacTable\"\n\nfunctions:\n  crearUsuario:\n    handler: handler.crearUsuario\n    events:\n      - httpApi:\n          path: /users2\n          method: post\n\n  obtenerUsuario:\n    handler: handler.obtenerUsuario\n    events:\n      - httpApi:\n          path: /users2/{userId}\n          method: get",
+    "serviceRawFile": "org: benyaops\nservice: reto-rimac-filtrado\n\nprovider:\n  name: aws\n  runtime: nodejs20.x\n  region: us-east-1\n  iam:\n    role:\n      statements:\n        - Effect: Allow\n          Action: [\"sns:Publish\"]\n          Resource: !Ref TopicMultipais\n\nfunctions:\n  publicador:\n    handler: handler.publicador\n    events:\n      - httpApi:\n          path: /registrar\n          method: post\n    environment:\n      TOPIC_ARN: !Ref TopicMultipais\n\nresources:\n  Resources:\n    # 1. El Topic\n    TopicMultipais:\n      Type: AWS::SNS::Topic\n      Properties:\n        TopicName: TopicMultipaisRimac\n\n    # 2. Las Colas\n    ColaPE:\n      Type: AWS::SQS::Queue\n      Properties:\n        QueueName: sqs_pe\n\n    ColaCL:\n      Type: AWS::SQS::Queue\n      Properties:\n        QueueName: sqs_cl\n\n    # 3. LAS SUSCRIPCIONES CON FILTRO (La clave del reto)\n    SuscripcionPE:\n      Type: AWS::SNS::Subscription\n      Properties:\n        Protocol: sqs\n        TopicArn: !Ref TopicMultipais\n        Endpoint: !GetAtt ColaPE.Arn\n        # AQUÍ ESTÁ EL FILTRO:\n        FilterPolicy:\n          countryISO: [\"pe\"]\n\n    SuscripcionCL:\n      Type: AWS::SNS::Subscription\n      Properties:\n        Protocol: sqs\n        TopicArn: !Ref TopicMultipais\n        Endpoint: !GetAtt ColaCL.Arn\n        FilterPolicy:\n          countryISO: [\"cl\"]\n\n    # Suscripción de Email (Sin filtro para recibir todo)\n    SuscripcionEmail:\n      Type: AWS::SNS::Subscription\n      Properties:\n        Protocol: email\n        TopicArn: !Ref TopicMultipais\n        Endpoint: \"benyaroot@gmail.com\"\n\n    # Permisos para que SNS pueda escribir en ambas colas (Importante)\n    SqsPolicy:\n      Type: AWS::SQS::QueuePolicy\n      Properties:\n        Queues: [ !Ref ColaPE, !Ref ColaCL ]\n        PolicyDocument:\n          Statement:\n            - Effect: Allow\n              Principal: \"*\"\n              Action: \"sqs:SendMessage\"\n              Resource: \"*\"\n              Condition:\n                ArnEquals:\n                  aws:SourceArn: !Ref TopicMultipais",
     "command": [
       "deploy"
     ],
@@ -911,56 +967,44 @@
     "orgName": "benyaops",
     "userId": null,
     "serviceProviderAwsAccountId": "851725266862",
-    "serviceProviderAwsCfStackName": "servicio-rimac-dev",
-    "serviceProviderAwsCfStackId": "arn:aws:cloudformation:us-east-1:851725266862:stack/servicio-rimac-dev/2e9cbf00-03e3-11f1-96fa-0affea986abf",
-    "serviceProviderAwsCfStackCreated": "2026-02-07T05:09:30.091Z",
+    "serviceProviderAwsCfStackName": "reto-rimac-filtrado-dev",
+    "serviceProviderAwsCfStackId": "arn:aws:cloudformation:us-east-1:851725266862:stack/reto-rimac-filtrado-dev/ccee8790-045d-11f1-9de6-0affccaa1a59",
+    "serviceProviderAwsCfStackCreated": "2026-02-07T19:47:14.307Z",
     "serviceProviderAwsCfStackUpdated": null,
     "serviceProviderAwsCfStackStatus": "CREATE_COMPLETE",
     "serviceProviderAwsCfStackOutputs": [
       {
-        "OutputKey": "ObtenerUsuarioLambdaFunctionQualifiedArn",
-        "OutputValue": "arn:aws:lambda:us-east-1:851725266862:function:servicio-rimac-dev-obtenerUsuario:1",
-        "Description": "Current Lambda function version",
-        "ExportName": "sls-servicio-rimac-dev-ObtenerUsuarioLambdaFunctionQualifiedArn"
-      },
-      {
-        "OutputKey": "CrearUsuarioLambdaFunctionQualifiedArn",
-        "OutputValue": "arn:aws:lambda:us-east-1:851725266862:function:servicio-rimac-dev-crearUsuario:1",
-        "Description": "Current Lambda function version",
-        "ExportName": "sls-servicio-rimac-dev-CrearUsuarioLambdaFunctionQualifiedArn"
-      },
-      {
         "OutputKey": "HttpApiId",
-        "OutputValue": "5xj12gago0",
+        "OutputValue": "v00ott7s26",
         "Description": "Id of the HTTP API",
-        "ExportName": "sls-servicio-rimac-dev-HttpApiId"
+        "ExportName": "sls-reto-rimac-filtrado-dev-HttpApiId"
+      },
+      {
+        "OutputKey": "PublicadorLambdaFunctionQualifiedArn",
+        "OutputValue": "arn:aws:lambda:us-east-1:851725266862:function:reto-rimac-filtrado-dev-publicador:1",
+        "Description": "Current Lambda function version",
+        "ExportName": "sls-reto-rimac-filtrado-dev-PublicadorLambdaFunctionQualifiedArn"
       },
       {
         "OutputKey": "ServerlessDeploymentBucketName",
         "OutputValue": "serverless-framework-deployments-us-east-1-a596bce8-6931",
-        "ExportName": "sls-servicio-rimac-dev-ServerlessDeploymentBucketName"
+        "ExportName": "sls-reto-rimac-filtrado-dev-ServerlessDeploymentBucketName"
       },
       {
         "OutputKey": "HttpApiUrl",
-        "OutputValue": "https://5xj12gago0.execute-api.us-east-1.amazonaws.com",
+        "OutputValue": "https://v00ott7s26.execute-api.us-east-1.amazonaws.com",
         "Description": "URL of the HTTP API",
-        "ExportName": "sls-servicio-rimac-dev-HttpApiUrl"
+        "ExportName": "sls-reto-rimac-filtrado-dev-HttpApiUrl"
       }
     ],
     "compiledCloudFormationTemplate": {
       "AWSTemplateFormatVersion": "2010-09-09",
       "Description": "The AWS CloudFormation template for this Serverless application",
       "Resources": {
-        "CrearUsuarioLogGroup": {
+        "PublicadorLogGroup": {
           "Type": "AWS::Logs::LogGroup",
           "Properties": {
-            "LogGroupName": "/aws/lambda/servicio-rimac-dev-crearUsuario"
-          }
-        },
-        "ObtenerUsuarioLogGroup": {
-          "Type": "AWS::Logs::LogGroup",
-          "Properties": {
-            "LogGroupName": "/aws/lambda/servicio-rimac-dev-obtenerUsuario"
+            "LogGroupName": "/aws/lambda/reto-rimac-filtrado-dev-publicador"
           }
         },
         "IamRoleLambdaExecution": {
@@ -988,7 +1032,7 @@
                   "Fn::Join": [
                     "-",
                     [
-                      "servicio-rimac",
+                      "reto-rimac-filtrado",
                       "dev",
                       "lambda"
                     ]
@@ -1006,7 +1050,7 @@
                       ],
                       "Resource": [
                         {
-                          "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/servicio-rimac-dev*:*"
+                          "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/reto-rimac-filtrado-dev*:*"
                         }
                       ]
                     },
@@ -1017,17 +1061,18 @@
                       ],
                       "Resource": [
                         {
-                          "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/servicio-rimac-dev*:*:*"
+                          "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/reto-rimac-filtrado-dev*:*:*"
                         }
                       ]
                     },
                     {
                       "Effect": "Allow",
                       "Action": [
-                        "dynamodb:PutItem",
-                        "dynamodb:GetItem"
+                        "sns:Publish"
                       ],
-                      "Resource": "arn:aws:dynamodb:us-east-1:851725266862:table/RimacTable"
+                      "Resource": {
+                        "Ref": "TopicMultipais"
+                      }
                     }
                   ]
                 }
@@ -1038,7 +1083,7 @@
               "Fn::Join": [
                 "-",
                 [
-                  "servicio-rimac",
+                  "reto-rimac-filtrado",
                   "dev",
                   {
                     "Ref": "AWS::Region"
@@ -1049,18 +1094,25 @@
             }
           }
         },
-        "CrearUsuarioLambdaFunction": {
+        "PublicadorLambdaFunction": {
           "Type": "AWS::Lambda::Function",
           "Properties": {
             "Code": {
               "S3Bucket": "serverless-framework-deployments-us-east-1-a596bce8-6931",
-              "S3Key": "serverless/servicio-rimac/dev/1770440964998-2026-02-07T05:09:24.998Z/servicio-rimac.zip"
+              "S3Key": "serverless/reto-rimac-filtrado/dev/1770494201146-2026-02-07T19:56:41.146Z/reto-rimac-filtrado.zip"
             },
-            "Handler": "handler.crearUsuario",
+            "Handler": "handler.publicador",
             "Runtime": "nodejs20.x",
-            "FunctionName": "servicio-rimac-dev-crearUsuario",
+            "FunctionName": "reto-rimac-filtrado-dev-publicador",
             "MemorySize": 1024,
             "Timeout": 6,
+            "Environment": {
+              "Variables": {
+                "TOPIC_ARN": {
+                  "Ref": "TopicMultipais"
+                }
+              }
+            },
             "Role": {
               "Fn::GetAtt": [
                 "IamRoleLambdaExecution",
@@ -1069,56 +1121,23 @@
             }
           },
           "DependsOn": [
-            "CrearUsuarioLogGroup"
+            "PublicadorLogGroup"
           ]
         },
-        "ObtenerUsuarioLambdaFunction": {
-          "Type": "AWS::Lambda::Function",
-          "Properties": {
-            "Code": {
-              "S3Bucket": "serverless-framework-deployments-us-east-1-a596bce8-6931",
-              "S3Key": "serverless/servicio-rimac/dev/1770440964998-2026-02-07T05:09:24.998Z/servicio-rimac.zip"
-            },
-            "Handler": "handler.obtenerUsuario",
-            "Runtime": "nodejs20.x",
-            "FunctionName": "servicio-rimac-dev-obtenerUsuario",
-            "MemorySize": 1024,
-            "Timeout": 6,
-            "Role": {
-              "Fn::GetAtt": [
-                "IamRoleLambdaExecution",
-                "Arn"
-              ]
-            }
-          },
-          "DependsOn": [
-            "ObtenerUsuarioLogGroup"
-          ]
-        },
-        "CrearUsuarioLambdaVersionwHW6Ju4XqbUVDcqkDu3b0ZrYIFygdmllUOtZQUQ": {
+        "PublicadorLambdaVersion3rj4AUoDI102gw4pua3C0icfPBv6sIDBnu8UiXXV8": {
           "Type": "AWS::Lambda::Version",
           "DeletionPolicy": "Retain",
           "Properties": {
             "FunctionName": {
-              "Ref": "CrearUsuarioLambdaFunction"
+              "Ref": "PublicadorLambdaFunction"
             },
-            "CodeSha256": "yDVWbtHm6P9qoY3HPELjzgnNPIOj42CEmblY6dFvZI0="
-          }
-        },
-        "ObtenerUsuarioLambdaVersion7c8xHVrOvEUMyHDuXAyhauXXejIsSmrZUrRqVuNAuE": {
-          "Type": "AWS::Lambda::Version",
-          "DeletionPolicy": "Retain",
-          "Properties": {
-            "FunctionName": {
-              "Ref": "ObtenerUsuarioLambdaFunction"
-            },
-            "CodeSha256": "yDVWbtHm6P9qoY3HPELjzgnNPIOj42CEmblY6dFvZI0="
+            "CodeSha256": "wG/XAUJQt4/vZ19J5UKzppXcoGq47hlCi8qbCawC4aU="
           }
         },
         "HttpApi": {
           "Type": "AWS::ApiGatewayV2::Api",
           "Properties": {
-            "Name": "dev-servicio-rimac",
+            "Name": "dev-reto-rimac-filtrado",
             "ProtocolType": "HTTP"
           }
         },
@@ -1135,12 +1154,12 @@
             }
           }
         },
-        "CrearUsuarioLambdaPermissionHttpApi": {
+        "PublicadorLambdaPermissionHttpApi": {
           "Type": "AWS::Lambda::Permission",
           "Properties": {
             "FunctionName": {
               "Fn::GetAtt": [
-                "CrearUsuarioLambdaFunction",
+                "PublicadorLambdaFunction",
                 "Arn"
               ]
             },
@@ -1172,7 +1191,7 @@
             }
           }
         },
-        "HttpApiIntegrationCrearUsuario": {
+        "HttpApiIntegrationPublicador": {
           "Type": "AWS::ApiGatewayV2::Integration",
           "Properties": {
             "ApiId": {
@@ -1181,7 +1200,7 @@
             "IntegrationType": "AWS_PROXY",
             "IntegrationUri": {
               "Fn::GetAtt": [
-                "CrearUsuarioLambdaFunction",
+                "PublicadorLambdaFunction",
                 "Arn"
               ]
             },
@@ -1189,126 +1208,140 @@
             "TimeoutInMillis": 30000
           }
         },
-        "HttpApiRoutePostUsers2": {
+        "HttpApiRoutePostRegistrar": {
           "Type": "AWS::ApiGatewayV2::Route",
           "Properties": {
             "ApiId": {
               "Ref": "HttpApi"
             },
-            "RouteKey": "POST /users2",
+            "RouteKey": "POST /registrar",
             "Target": {
               "Fn::Join": [
                 "/",
                 [
                   "integrations",
                   {
-                    "Ref": "HttpApiIntegrationCrearUsuario"
+                    "Ref": "HttpApiIntegrationPublicador"
                   }
                 ]
               ]
             }
           },
-          "DependsOn": "HttpApiIntegrationCrearUsuario"
+          "DependsOn": "HttpApiIntegrationPublicador"
         },
-        "ObtenerUsuarioLambdaPermissionHttpApi": {
-          "Type": "AWS::Lambda::Permission",
+        "TopicMultipais": {
+          "Type": "AWS::SNS::Topic",
           "Properties": {
-            "FunctionName": {
+            "TopicName": "TopicMultipaisRimac"
+          }
+        },
+        "ColaPE": {
+          "Type": "AWS::SQS::Queue",
+          "Properties": {
+            "QueueName": "sqs_pe"
+          }
+        },
+        "ColaCL": {
+          "Type": "AWS::SQS::Queue",
+          "Properties": {
+            "QueueName": "sqs_cl"
+          }
+        },
+        "SuscripcionPE": {
+          "Type": "AWS::SNS::Subscription",
+          "Properties": {
+            "Protocol": "sqs",
+            "TopicArn": {
+              "Ref": "TopicMultipais"
+            },
+            "Endpoint": {
               "Fn::GetAtt": [
-                "ObtenerUsuarioLambdaFunction",
+                "ColaPE",
                 "Arn"
               ]
             },
-            "Action": "lambda:InvokeFunction",
-            "Principal": "apigateway.amazonaws.com",
-            "SourceArn": {
-              "Fn::Join": [
-                "",
-                [
-                  "arn:",
-                  {
-                    "Ref": "AWS::Partition"
-                  },
-                  ":execute-api:",
-                  {
-                    "Ref": "AWS::Region"
-                  },
-                  ":",
-                  {
-                    "Ref": "AWS::AccountId"
-                  },
-                  ":",
-                  {
-                    "Ref": "HttpApi"
-                  },
-                  "/*"
-                ]
+            "FilterPolicy": {
+              "countryISO": [
+                "pe"
               ]
             }
           }
         },
-        "HttpApiIntegrationObtenerUsuario": {
-          "Type": "AWS::ApiGatewayV2::Integration",
+        "SuscripcionCL": {
+          "Type": "AWS::SNS::Subscription",
           "Properties": {
-            "ApiId": {
-              "Ref": "HttpApi"
+            "Protocol": "sqs",
+            "TopicArn": {
+              "Ref": "TopicMultipais"
             },
-            "IntegrationType": "AWS_PROXY",
-            "IntegrationUri": {
+            "Endpoint": {
               "Fn::GetAtt": [
-                "ObtenerUsuarioLambdaFunction",
+                "ColaCL",
                 "Arn"
               ]
             },
-            "PayloadFormatVersion": "2.0",
-            "TimeoutInMillis": 30000
+            "FilterPolicy": {
+              "countryISO": [
+                "cl"
+              ]
+            }
           }
         },
-        "HttpApiRouteGetUsers2UseridVar": {
-          "Type": "AWS::ApiGatewayV2::Route",
+        "SuscripcionEmail": {
+          "Type": "AWS::SNS::Subscription",
           "Properties": {
-            "ApiId": {
-              "Ref": "HttpApi"
+            "Protocol": "email",
+            "TopicArn": {
+              "Ref": "TopicMultipais"
             },
-            "RouteKey": "GET /users2/{userId}",
-            "Target": {
-              "Fn::Join": [
-                "/",
-                [
-                  "integrations",
-                  {
-                    "Ref": "HttpApiIntegrationObtenerUsuario"
+            "Endpoint": "benyaroot@gmail.com"
+          }
+        },
+        "SqsPolicy": {
+          "Type": "AWS::SQS::QueuePolicy",
+          "Properties": {
+            "Queues": [
+              {
+                "Ref": "ColaPE"
+              },
+              {
+                "Ref": "ColaCL"
+              }
+            ],
+            "PolicyDocument": {
+              "Statement": [
+                {
+                  "Effect": "Allow",
+                  "Principal": "*",
+                  "Action": "sqs:SendMessage",
+                  "Resource": "*",
+                  "Condition": {
+                    "ArnEquals": {
+                      "aws:SourceArn": {
+                        "Ref": "TopicMultipais"
+                      }
+                    }
                   }
-                ]
+                }
               ]
             }
-          },
-          "DependsOn": "HttpApiIntegrationObtenerUsuario"
+          }
         }
       },
       "Outputs": {
         "ServerlessDeploymentBucketName": {
           "Value": "serverless-framework-deployments-us-east-1-a596bce8-6931",
           "Export": {
-            "Name": "sls-servicio-rimac-dev-ServerlessDeploymentBucketName"
+            "Name": "sls-reto-rimac-filtrado-dev-ServerlessDeploymentBucketName"
           }
         },
-        "CrearUsuarioLambdaFunctionQualifiedArn": {
+        "PublicadorLambdaFunctionQualifiedArn": {
           "Description": "Current Lambda function version",
           "Value": {
-            "Ref": "CrearUsuarioLambdaVersionwHW6Ju4XqbUVDcqkDu3b0ZrYIFygdmllUOtZQUQ"
+            "Ref": "PublicadorLambdaVersion3rj4AUoDI102gw4pua3C0icfPBv6sIDBnu8UiXXV8"
           },
           "Export": {
-            "Name": "sls-servicio-rimac-dev-CrearUsuarioLambdaFunctionQualifiedArn"
-          }
-        },
-        "ObtenerUsuarioLambdaFunctionQualifiedArn": {
-          "Description": "Current Lambda function version",
-          "Value": {
-            "Ref": "ObtenerUsuarioLambdaVersion7c8xHVrOvEUMyHDuXAyhauXXejIsSmrZUrRqVuNAuE"
-          },
-          "Export": {
-            "Name": "sls-servicio-rimac-dev-ObtenerUsuarioLambdaFunctionQualifiedArn"
+            "Name": "sls-reto-rimac-filtrado-dev-PublicadorLambdaFunctionQualifiedArn"
           }
         },
         "HttpApiId": {
@@ -1317,7 +1350,7 @@
             "Ref": "HttpApi"
           },
           "Export": {
-            "Name": "sls-servicio-rimac-dev-HttpApiId"
+            "Name": "sls-reto-rimac-filtrado-dev-HttpApiId"
           }
         },
         "HttpApiUrl": {
@@ -1342,7 +1375,7 @@
             ]
           },
           "Export": {
-            "Name": "sls-servicio-rimac-dev-HttpApiUrl"
+            "Name": "sls-reto-rimac-filtrado-dev-HttpApiUrl"
           }
         }
       }
