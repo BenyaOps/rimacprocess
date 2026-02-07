@@ -1,0 +1,30 @@
+org: benyaops
+service: servicio-rimac
+provider:
+  name: aws
+  runtime: nodejs20.x
+  region: us-east-1 # Cambia esto a tu región
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+          # Usamos el ARN de tu tabla existente
+          Resource: "arn:aws:dynamodb:us-east-1:851725266862:table/RimacTable"
+
+functions:
+  crearUsuario:
+    handler: handler.crearUsuario
+    events:
+      - httpApi:
+          path: /users2
+          method: post
+
+  obtenerUsuario:
+    handler: handler.obtenerUsuario
+    events:
+      - httpApi:
+          path: /users2/{userId}
+          method: get
