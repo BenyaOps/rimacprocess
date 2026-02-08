@@ -19,7 +19,7 @@ const createWorker = async (event, dbConfig) => {
             const data = JSON.parse(snsMessage.Message);
 
             console.log(`Insertando en Postgres (${data.countryISO}):`, data.nombre);
-
+            // Usamos parámetros para evitar SQL Injection
             const query = "INSERT INTO appointments (user_id, nombre, created_at) VALUES ($1, $2, NOW())";
             await client.query(query, [data.userId, data.nombre]);
         }
