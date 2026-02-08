@@ -21,6 +21,30 @@ functions:
           method: post
     environment:
       TOPIC_ARN: !Ref TopicMultipais
+  
+  appointment_pe:
+    handler: handler_pe.appointmentPE
+    events:
+      - sqs:
+          arn: !GetAtt ColaPE.Arn
+          batchSize: 1 # Procesamos de 1 en 1 para este ejemplo
+    environment:
+      DB_HOST: "tu-host-mysql-pe.com"
+      DB_USER: "admin"
+      DB_PASS: "password123"
+      DB_NAME: "rimac_peru"
+
+  appointment_cl:
+    handler: handler_cl.appointmentCL
+    events:
+      - sqs:
+          arn: !GetAtt ColaCL.Arn
+          batchSize: 1
+    environment:
+      DB_HOST: "tu-host-mysql-cl.com"
+      DB_USER: "admin"
+      DB_PASS: "password123"
+      DB_NAME: "rimac_chile"
 
 resources:
   Resources:
