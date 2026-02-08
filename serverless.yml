@@ -1,5 +1,5 @@
 org: benyaops
-service: flujo-ApDbSnsSqs5-rimac
+service: flujo-ApDbSnsSqs6-rimac
 
 provider:
   name: aws
@@ -66,11 +66,11 @@ resources:
     ColaPE:
       Type: AWS::SQS::Queue
       Properties:
-        QueueName: sqs_pe5
+        QueueName: sqs_pe6
     ColaCL:
       Type: AWS::SQS::Queue
       Properties:
-        QueueName: sqs_cl5
+        QueueName: sqs_cl6
 
     # Suscripciones con Filtros
     SuscripcionPE:
