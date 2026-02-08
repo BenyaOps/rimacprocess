@@ -1,5 +1,5 @@
 org: benyaops
-service: reto-rimac-filtrado
+service: flujo-ApDbSnsSqs5-rimac
 
 provider:
   name: aws
@@ -8,71 +8,77 @@ provider:
   iam:
     role:
       statements:
+        # Permisos para DynamoDB
+        - Effect: Allow
+          Action: ["dynamodb:PutItem"]
+          Resource: "arn:aws:dynamodb:us-east-1:851725266862:table/RimacTable"
+        # Permisos para SNS
         - Effect: Allow
           Action: ["sns:Publish"]
-          Resource: !Ref TopicMultipais
+          Resource: !Ref TopicCentral
 
 functions:
-  publicador:
-    handler: handler.publicador
+  # 1. El Productor
+  consultarDynamo:
+    handler: handler.consultarDynamo
     events:
       - httpApi:
           path: /registrar
           method: post
+      # Ruta para consultar (GET)
+      - httpApi:
+          path: /consultar/{userId} # deberia ser insuredId, pero esta vez lo cambiamos a userId para que sea mas generico
+          method: get
     environment:
-      TOPIC_ARN: !Ref TopicMultipais
-  
+      TOPIC_ARN: !Ref TopicCentral
+      TABLE_NAME: RimacTable
+
+  # 2. Los Workers (Consumidores)
   appointment_pe:
-    handler: handler_pe.appointmentPE
+    handler: workers.appointment_pe
     events:
       - sqs:
           arn: !GetAtt ColaPE.Arn
-          batchSize: 1 # Procesamos de 1 en 1 para este ejemplo
     environment:
-      DB_HOST: "tu-host-mysql-pe.com"
-      DB_USER: "admin"
-      DB_PASS: "password123"
-      DB_NAME: "rimac_peru"
+      DB_HOST: "ep-spring-hat-ajpgkw66-pooler.c-3.us-east-2.aws.neon.tech"
+      DB_NAME: "neondb"
+      DB_USER: "neondb_owner"
+      DB_PASS: "npg_5MpucoayHAF8"
 
   appointment_cl:
-    handler: handler_cl.appointmentCL
+    handler: workers.appointment_cl
     events:
       - sqs:
           arn: !GetAtt ColaCL.Arn
-          batchSize: 1
     environment:
-      DB_HOST: "tu-host-mysql-cl.com"
-      DB_USER: "admin"
-      DB_PASS: "password123"
-      DB_NAME: "rimac_chile"
+      DB_HOST: "ep-spring-hat-ajpgkw66-pooler.c-3.us-east-2.aws.neon.tech"
+      DB_NAME: "neondb"
+      DB_USER: "neondb_owner"
+      DB_PASS: "npg_5MpucoayHAF8"
 
 resources:
   Resources:
-    # 1. El Topic
-    TopicMultipais:
+    # SNS Topic
+    TopicCentral:
       Type: AWS::SNS::Topic
-      Properties:
-        TopicName: TopicMultipaisRimac
 
-    # 2. Las Colas
+    # Colas SQS
     ColaPE:
       Type: AWS::SQS::Queue
       Properties:
-        QueueName: sqs_pe
-
+        QueueName: sqs_pe5
     ColaCL:
       Type: AWS::SQS::Queue
       Properties:
-        QueueName: sqs_cl
+        QueueName: sqs_cl5
 
-    # 3. LAS SUSCRIPCIONES CON FILTRO (La clave del reto)
+    # Suscripciones con Filtros
     SuscripcionPE:
       Type: AWS::SNS::Subscription
       Properties:
         Protocol: sqs
-        TopicArn: !Ref TopicMultipais
+        TopicArn: !Ref TopicCentral
         Endpoint: !GetAtt ColaPE.Arn
-        # AQUÍ ESTÁ EL FILTRO:
         FilterPolicy:
           countryISO: ["pe"]
 
@@ -80,7 +86,7 @@ resources:
       Type: AWS::SNS::Subscription
       Properties:
         Protocol: sqs
-        TopicArn: !Ref TopicMultipais
+        TopicArn: !Ref TopicCentral
         Endpoint: !GetAtt ColaCL.Arn
         FilterPolicy:
           countryISO: ["cl"]
@@ -90,10 +96,10 @@ resources:
       Type: AWS::SNS::Subscription
       Properties:
         Protocol: email
-        TopicArn: !Ref TopicMultipais
+        TopicArn: !Ref TopicCentral
         Endpoint: "benyaroot@gmail.com"
 
-    # Permisos para que SNS pueda escribir en ambas colas (Importante)
+    # Política para que SNS pueda hablar con SQS
     SqsPolicy:
       Type: AWS::SQS::QueuePolicy
       Properties:
@@ -106,4 +112,4 @@ resources:
               Resource: "*"
               Condition:
                 ArnEquals:
-                  aws:SourceArn: !Ref TopicMultipais
+                  aws:SourceArn: !Ref TopicCentral

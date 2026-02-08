@@ -2,10 +2,22 @@
   "AWSTemplateFormatVersion": "2010-09-09",
   "Description": "The AWS CloudFormation template for this Serverless application",
   "Resources": {
-    "PublicadorLogGroup": {
+    "ConsultarDynamoLogGroup": {
       "Type": "AWS::Logs::LogGroup",
       "Properties": {
-        "LogGroupName": "/aws/lambda/reto-rimac-filtrado-dev-publicador"
+        "LogGroupName": "/aws/lambda/flujo-ApDbSnsSqs5-rimac-dev-consultarDynamo"
+      }
+    },
+    "AppointmentUnderscorepeLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/flujo-ApDbSnsSqs5-rimac-dev-appointment_pe"
+      }
+    },
+    "AppointmentUnderscoreclLogGroup": {
+      "Type": "AWS::Logs::LogGroup",
+      "Properties": {
+        "LogGroupName": "/aws/lambda/flujo-ApDbSnsSqs5-rimac-dev-appointment_cl"
       }
     },
     "IamRoleLambdaExecution": {
@@ -33,7 +45,7 @@
               "Fn::Join": [
                 "-",
                 [
-                  "reto-rimac-filtrado",
+                  "flujo-ApDbSnsSqs5-rimac",
                   "dev",
                   "lambda"
                 ]
@@ -51,7 +63,7 @@
                   ],
                   "Resource": [
                     {
-                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/reto-rimac-filtrado-dev*:*"
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/flujo-ApDbSnsSqs5-rimac-dev*:*"
                     }
                   ]
                 },
@@ -62,9 +74,16 @@
                   ],
                   "Resource": [
                     {
-                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/reto-rimac-filtrado-dev*:*:*"
+                      "Fn::Sub": "arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/lambda/flujo-ApDbSnsSqs5-rimac-dev*:*:*"
                     }
                   ]
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "dynamodb:PutItem"
+                  ],
+                  "Resource": "arn:aws:dynamodb:us-east-1:851725266862:table/RimacTable"
                 },
                 {
                   "Effect": "Allow",
@@ -72,8 +91,30 @@
                     "sns:Publish"
                   ],
                   "Resource": {
-                    "Ref": "TopicMultipais"
+                    "Ref": "TopicCentral"
                   }
+                },
+                {
+                  "Effect": "Allow",
+                  "Action": [
+                    "sqs:ReceiveMessage",
+                    "sqs:DeleteMessage",
+                    "sqs:GetQueueAttributes"
+                  ],
+                  "Resource": [
+                    {
+                      "Fn::GetAtt": [
+                        "ColaPE",
+                        "Arn"
+                      ]
+                    },
+                    {
+                      "Fn::GetAtt": [
+                        "ColaCL",
+                        "Arn"
+                      ]
+                    }
+                  ]
                 }
               ]
             }
@@ -84,7 +125,7 @@
           "Fn::Join": [
             "-",
             [
-              "reto-rimac-filtrado",
+              "flujo-ApDbSnsSqs5-rimac",
               "dev",
               {
                 "Ref": "AWS::Region"
@@ -95,23 +136,24 @@
         }
       }
     },
-    "PublicadorLambdaFunction": {
+    "ConsultarDynamoLambdaFunction": {
       "Type": "AWS::Lambda::Function",
       "Properties": {
         "Code": {
           "S3Bucket": "serverless-framework-deployments-us-east-1-a596bce8-6931",
-          "S3Key": "serverless/reto-rimac-filtrado/dev/1770494201146-2026-02-07T19:56:41.146Z/reto-rimac-filtrado.zip"
+          "S3Key": "serverless/flujo-ApDbSnsSqs5-rimac/dev/1770564767166-2026-02-08T15:32:47.166Z/flujo-ApDbSnsSqs5-rimac.zip"
         },
-        "Handler": "handler.publicador",
+        "Handler": "handler.consultarDynamo",
         "Runtime": "nodejs20.x",
-        "FunctionName": "reto-rimac-filtrado-dev-publicador",
+        "FunctionName": "flujo-ApDbSnsSqs5-rimac-dev-consultarDynamo",
         "MemorySize": 1024,
         "Timeout": 6,
         "Environment": {
           "Variables": {
             "TOPIC_ARN": {
-              "Ref": "TopicMultipais"
-            }
+              "Ref": "TopicCentral"
+            },
+            "TABLE_NAME": "RimacTable"
           }
         },
         "Role": {
@@ -122,23 +164,149 @@
         }
       },
       "DependsOn": [
-        "PublicadorLogGroup"
+        "ConsultarDynamoLogGroup"
       ]
     },
-    "PublicadorLambdaVersion3rj4AUoDI102gw4pua3C0icfPBv6sIDBnu8UiXXV8": {
+    "AppointmentUnderscorepeLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": "serverless-framework-deployments-us-east-1-a596bce8-6931",
+          "S3Key": "serverless/flujo-ApDbSnsSqs5-rimac/dev/1770564767166-2026-02-08T15:32:47.166Z/flujo-ApDbSnsSqs5-rimac.zip"
+        },
+        "Handler": "workers.appointment_pe",
+        "Runtime": "nodejs20.x",
+        "FunctionName": "flujo-ApDbSnsSqs5-rimac-dev-appointment_pe",
+        "MemorySize": 1024,
+        "Timeout": 6,
+        "Environment": {
+          "Variables": {
+            "DB_HOST": "ep-spring-hat-ajpgkw66-pooler.c-3.us-east-2.aws.neon.tech",
+            "DB_NAME": "neondb",
+            "DB_USER": "neondb_owner",
+            "DB_PASS": "npg_5MpucoayHAF8"
+          }
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": [
+        "AppointmentUnderscorepeLogGroup"
+      ]
+    },
+    "AppointmentUnderscoreclLambdaFunction": {
+      "Type": "AWS::Lambda::Function",
+      "Properties": {
+        "Code": {
+          "S3Bucket": "serverless-framework-deployments-us-east-1-a596bce8-6931",
+          "S3Key": "serverless/flujo-ApDbSnsSqs5-rimac/dev/1770564767166-2026-02-08T15:32:47.166Z/flujo-ApDbSnsSqs5-rimac.zip"
+        },
+        "Handler": "workers.appointment_cl",
+        "Runtime": "nodejs20.x",
+        "FunctionName": "flujo-ApDbSnsSqs5-rimac-dev-appointment_cl",
+        "MemorySize": 1024,
+        "Timeout": 6,
+        "Environment": {
+          "Variables": {
+            "DB_HOST": "ep-spring-hat-ajpgkw66-pooler.c-3.us-east-2.aws.neon.tech",
+            "DB_NAME": "neondb",
+            "DB_USER": "neondb_owner",
+            "DB_PASS": "npg_5MpucoayHAF8"
+          }
+        },
+        "Role": {
+          "Fn::GetAtt": [
+            "IamRoleLambdaExecution",
+            "Arn"
+          ]
+        }
+      },
+      "DependsOn": [
+        "AppointmentUnderscoreclLogGroup"
+      ]
+    },
+    "ConsultarDynamoLambdaVersionnnef2tUSS5UeFMipgLOaRR1vhKbtxY2yDLzsLOUv0o": {
       "Type": "AWS::Lambda::Version",
       "DeletionPolicy": "Retain",
       "Properties": {
         "FunctionName": {
-          "Ref": "PublicadorLambdaFunction"
+          "Ref": "ConsultarDynamoLambdaFunction"
         },
-        "CodeSha256": "wG/XAUJQt4/vZ19J5UKzppXcoGq47hlCi8qbCawC4aU="
+        "CodeSha256": "461QtVPVEawYiYgdyiJxO1lA4Hi8jrkeZHJO9GFZW7g="
+      }
+    },
+    "AppointmentUnderscorepeLambdaVersionQAqZMJSRdeOpav1t0FOEL3VlrVcs7iLgRdGBj82AY": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "AppointmentUnderscorepeLambdaFunction"
+        },
+        "CodeSha256": "461QtVPVEawYiYgdyiJxO1lA4Hi8jrkeZHJO9GFZW7g="
+      }
+    },
+    "AppointmentUnderscoreclLambdaVersionlWnImasH7Vk2GVLeSQPvslmCgkBaVUKktrIiPfBlIc": {
+      "Type": "AWS::Lambda::Version",
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "FunctionName": {
+          "Ref": "AppointmentUnderscoreclLambdaFunction"
+        },
+        "CodeSha256": "461QtVPVEawYiYgdyiJxO1lA4Hi8jrkeZHJO9GFZW7g="
+      }
+    },
+    "AppointmentUnderscorepeEventSourceMappingSQSColaPE": {
+      "Type": "AWS::Lambda::EventSourceMapping",
+      "DependsOn": [
+        "IamRoleLambdaExecution"
+      ],
+      "Properties": {
+        "BatchSize": 10,
+        "EventSourceArn": {
+          "Fn::GetAtt": [
+            "ColaPE",
+            "Arn"
+          ]
+        },
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AppointmentUnderscorepeLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Enabled": true
+      }
+    },
+    "AppointmentUnderscoreclEventSourceMappingSQSColaCL": {
+      "Type": "AWS::Lambda::EventSourceMapping",
+      "DependsOn": [
+        "IamRoleLambdaExecution"
+      ],
+      "Properties": {
+        "BatchSize": 10,
+        "EventSourceArn": {
+          "Fn::GetAtt": [
+            "ColaCL",
+            "Arn"
+          ]
+        },
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "AppointmentUnderscoreclLambdaFunction",
+            "Arn"
+          ]
+        },
+        "Enabled": true
       }
     },
     "HttpApi": {
       "Type": "AWS::ApiGatewayV2::Api",
       "Properties": {
-        "Name": "dev-reto-rimac-filtrado",
+        "Name": "dev-flujo-ApDbSnsSqs5-rimac",
         "ProtocolType": "HTTP"
       }
     },
@@ -155,12 +323,12 @@
         }
       }
     },
-    "PublicadorLambdaPermissionHttpApi": {
+    "ConsultarDynamoLambdaPermissionHttpApi": {
       "Type": "AWS::Lambda::Permission",
       "Properties": {
         "FunctionName": {
           "Fn::GetAtt": [
-            "PublicadorLambdaFunction",
+            "ConsultarDynamoLambdaFunction",
             "Arn"
           ]
         },
@@ -192,7 +360,7 @@
         }
       }
     },
-    "HttpApiIntegrationPublicador": {
+    "HttpApiIntegrationConsultarDynamo": {
       "Type": "AWS::ApiGatewayV2::Integration",
       "Properties": {
         "ApiId": {
@@ -201,7 +369,7 @@
         "IntegrationType": "AWS_PROXY",
         "IntegrationUri": {
           "Fn::GetAtt": [
-            "PublicadorLambdaFunction",
+            "ConsultarDynamoLambdaFunction",
             "Arn"
           ]
         },
@@ -222,30 +390,48 @@
             [
               "integrations",
               {
-                "Ref": "HttpApiIntegrationPublicador"
+                "Ref": "HttpApiIntegrationConsultarDynamo"
               }
             ]
           ]
         }
       },
-      "DependsOn": "HttpApiIntegrationPublicador"
+      "DependsOn": "HttpApiIntegrationConsultarDynamo"
     },
-    "TopicMultipais": {
-      "Type": "AWS::SNS::Topic",
+    "HttpApiRouteGetConsultarUseridVar": {
+      "Type": "AWS::ApiGatewayV2::Route",
       "Properties": {
-        "TopicName": "TopicMultipaisRimac"
-      }
+        "ApiId": {
+          "Ref": "HttpApi"
+        },
+        "RouteKey": "GET /consultar/{userId}",
+        "Target": {
+          "Fn::Join": [
+            "/",
+            [
+              "integrations",
+              {
+                "Ref": "HttpApiIntegrationConsultarDynamo"
+              }
+            ]
+          ]
+        }
+      },
+      "DependsOn": "HttpApiIntegrationConsultarDynamo"
+    },
+    "TopicCentral": {
+      "Type": "AWS::SNS::Topic"
     },
     "ColaPE": {
       "Type": "AWS::SQS::Queue",
       "Properties": {
-        "QueueName": "sqs_pe"
+        "QueueName": "sqs_pe5"
       }
     },
     "ColaCL": {
       "Type": "AWS::SQS::Queue",
       "Properties": {
-        "QueueName": "sqs_cl"
+        "QueueName": "sqs_cl5"
       }
     },
     "SuscripcionPE": {
@@ -253,7 +439,7 @@
       "Properties": {
         "Protocol": "sqs",
         "TopicArn": {
-          "Ref": "TopicMultipais"
+          "Ref": "TopicCentral"
         },
         "Endpoint": {
           "Fn::GetAtt": [
@@ -273,7 +459,7 @@
       "Properties": {
         "Protocol": "sqs",
         "TopicArn": {
-          "Ref": "TopicMultipais"
+          "Ref": "TopicCentral"
         },
         "Endpoint": {
           "Fn::GetAtt": [
@@ -293,7 +479,7 @@
       "Properties": {
         "Protocol": "email",
         "TopicArn": {
-          "Ref": "TopicMultipais"
+          "Ref": "TopicCentral"
         },
         "Endpoint": "benyaroot@gmail.com"
       }
@@ -319,7 +505,7 @@
               "Condition": {
                 "ArnEquals": {
                   "aws:SourceArn": {
-                    "Ref": "TopicMultipais"
+                    "Ref": "TopicCentral"
                   }
                 }
               }
@@ -333,16 +519,34 @@
     "ServerlessDeploymentBucketName": {
       "Value": "serverless-framework-deployments-us-east-1-a596bce8-6931",
       "Export": {
-        "Name": "sls-reto-rimac-filtrado-dev-ServerlessDeploymentBucketName"
+        "Name": "sls-flujo-ApDbSnsSqs5-rimac-dev-ServerlessDeploymentBucketName"
       }
     },
-    "PublicadorLambdaFunctionQualifiedArn": {
+    "ConsultarDynamoLambdaFunctionQualifiedArn": {
       "Description": "Current Lambda function version",
       "Value": {
-        "Ref": "PublicadorLambdaVersion3rj4AUoDI102gw4pua3C0icfPBv6sIDBnu8UiXXV8"
+        "Ref": "ConsultarDynamoLambdaVersionnnef2tUSS5UeFMipgLOaRR1vhKbtxY2yDLzsLOUv0o"
       },
       "Export": {
-        "Name": "sls-reto-rimac-filtrado-dev-PublicadorLambdaFunctionQualifiedArn"
+        "Name": "sls-flujo-ApDbSnsSqs5-rimac-dev-ConsultarDynamoLambdaFunctionQualifiedArn"
+      }
+    },
+    "AppointmentUnderscorepeLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "AppointmentUnderscorepeLambdaVersionQAqZMJSRdeOpav1t0FOEL3VlrVcs7iLgRdGBj82AY"
+      },
+      "Export": {
+        "Name": "sls-flujo-ApDbSnsSqs5-rimac-dev-AppointmentUnderscorepeLambdaFunctionQualifiedArn"
+      }
+    },
+    "AppointmentUnderscoreclLambdaFunctionQualifiedArn": {
+      "Description": "Current Lambda function version",
+      "Value": {
+        "Ref": "AppointmentUnderscoreclLambdaVersionlWnImasH7Vk2GVLeSQPvslmCgkBaVUKktrIiPfBlIc"
+      },
+      "Export": {
+        "Name": "sls-flujo-ApDbSnsSqs5-rimac-dev-AppointmentUnderscoreclLambdaFunctionQualifiedArn"
       }
     },
     "HttpApiId": {
@@ -351,7 +555,7 @@
         "Ref": "HttpApi"
       },
       "Export": {
-        "Name": "sls-reto-rimac-filtrado-dev-HttpApiId"
+        "Name": "sls-flujo-ApDbSnsSqs5-rimac-dev-HttpApiId"
       }
     },
     "HttpApiUrl": {
@@ -376,7 +580,7 @@
         ]
       },
       "Export": {
-        "Name": "sls-reto-rimac-filtrado-dev-HttpApiUrl"
+        "Name": "sls-flujo-ApDbSnsSqs5-rimac-dev-HttpApiUrl"
       }
     }
   }
