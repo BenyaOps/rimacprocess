@@ -36,6 +36,18 @@ El flujo de datos está diseñado bajo el patrón de **Fan-out** con filtrado de
 
 ---
 
+## Flujo textual
+
+- Al hacer deploy, se genera un API Gateway, con dos servicios (consultar y registrar)
+- Estos servicios estan dentro de un lambda function.
+- Al disparar el lambda, hace un insert o consulta datos a la tabla de un DynamoDB.
+- Al disparar el lambda, se comunica con el servicio SNS
+- El servicio SNS, recibe dentro de sus paranetros el valor **countryISO**, dependiendo si es "pe" o "cl", se comunica con el serviciio sqs (sqs_pe o sqs_cl).
+- Cada sqs esta conectado aun lambda function para el appointment (appointment_pe o appointment_cl).
+- Cada lambda appointment se comunica con una base de datos RDS (por efectos de la prueba tecnica se comunica a una sola base de datos).
+
+---
+
 ## 📑 API Endpoints
 
 ### 1. Registrar Cita (POST)
