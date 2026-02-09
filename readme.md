@@ -75,6 +75,21 @@ curl -X POST https://m2i02b459j.execute-api.us-east-1.amazonaws.com/registrar \
 ```
 ---
 
+## 🛠️ Stack Tecnológico
+
+| Componente | Tecnología |
+| --- | --- |
+| **Lenguaje** | TypeScript |
+| **Framework** | Serverless Framework v4 |
+| **Bundler** | ESBuild (Nativo) |
+| **NoSQL** | Amazon DynamoDB |
+| **Messaging** | Amazon SNS & SQS |
+| **Relational DB** | Mysql - PostgreSQL |
+
+**nota:** Para lograr el insert a la base de datos relacional, se uso postgresql, sin embargo, dentro de la arquitectura, tambien incluye integracion con MySQL.
+
+--- 
+
 ## 🛡️ IAM & Seguridad
 
 El proyecto utiliza el principio de Privilegio Mínimo. Los permisos están limitados a las acciones dynamodb:PutItem, dynamodb:Query y sns:Publish sobre los recursos específicos del stack.

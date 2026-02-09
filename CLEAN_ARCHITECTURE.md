@@ -75,7 +75,7 @@ src/
 ### POST /registrar (Crear Cita)
 ```
 HTTP Request 
-  → handler_new.mjs 
+  → handler/handler.ts
   → HTTPController.registerAppointment() 
   → RegisterAppointmentUseCase.execute()
   → DynamoDBRepository.save()
@@ -83,10 +83,10 @@ HTTP Request
   → HTTP Response
 ```
 
-### GET /consultar/{userId} (Consultar Citas)
+### GET /consultar/{insuredId} (Consultar Citas)
 ```
 HTTP Request
-  → handler_new.mjs
+  → handler/handler.ts
   → HTTPController.consultAppointment()
   → ConsultAppointmentUseCase.execute()
   → DynamoDBRepository.findAll()
