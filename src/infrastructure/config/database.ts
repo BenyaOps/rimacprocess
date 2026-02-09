@@ -1,5 +1,5 @@
 import { Pool, PoolClient } from 'pg';
-import { IDatabaseConfig } from '../../shared/types.js';
+import { IDatabaseConfig } from '../../shared/types';
 
 /**
  * Configuración de Base de Datos

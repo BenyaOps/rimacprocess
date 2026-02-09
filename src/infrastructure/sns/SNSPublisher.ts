@@ -1,6 +1,6 @@
 import { SNSClient, PublishCommand } from '@aws-sdk/client-sns';
-import { IPublishRepository } from '../../domain/repositories/IPublishRepository.js';
-import { IMessageAttributes, InfrastructureError } from '../../shared/types.js';
+import { IPublishRepository } from '../../domain/repositories/IPublishRepository';
+import { IMessageAttributes, InfrastructureError } from '../../shared/types';
 
 /**
  * Implementación de Repositorio de Publicación con SNS

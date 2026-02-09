@@ -1,5 +1,5 @@
-import { Appointment } from '../entities/Appointment.js';
-import { IAppointment, IMessageAttributes } from '../../shared/types.js';
+import { Appointment } from '../entities/Appointment';
+import { IAppointment, IMessageAttributes } from '../../shared/types';
 
 /**
  * Interface para Repositorio de Appointments - Capa de Dominio
@@ -12,9 +12,9 @@ export interface IAppointmentRepository {
     save(appointment: Appointment): Promise<IAppointment>;
 
     /**
-     * Encuentra todas las citas de un usuario
+     * Encuentra todas las citas de un asegurado
      */
-    findAll(userId: string): Promise<IAppointment[]>;
+    findAll(insuredId: string): Promise<IAppointment[]>;
 
     /**
      * Encuentra una cita por ID

@@ -1,64 +1,63 @@
-import { Pool, PoolClient } from 'pg';
+import { Pool, PoolConnection } from 'mysql2/promise';
 import { IAppointmentRepository } from '../../domain/repositories/IAppointmentRepository';
 import { Appointment } from '../../domain/entities/Appointment';
-import { IAppointment, IPostgresAppointment, InfrastructureError } from '../../shared/types';
+import { IAppointment, IMySQLAppointment, InfrastructureError } from '../../shared/types';
 
 /**
- * Implementación de Repositorio con PostgreSQL
+ * Implementación de Repositorio con MySQL
  * Capa: Infraestructura
  * Usado por los workers para guardar en BD regional
  */
-export class PostgresRepository implements IAppointmentRepository {
+export class MySQLRepository implements IAppointmentRepository {
     constructor(private readonly pool: Pool) {}
 
     /**
-     * Guarda una cita en PostgreSQL
+     * Guarda una cita en MySQL
      */
     async save(appointment: Appointment): Promise<IAppointment> {
-        const client: PoolClient = await this.pool.connect();
+        const connection: PoolConnection = await this.pool.getConnection();
         try {
             const query = `
-                INSERT INTO appointments (insured_id, nombre, created_at)
-                VALUES ($1, $2, NOW())
-                RETURNING id, insured_id, nombre, created_at, updated_at
+                INSERT INTO appointments (user_id, nombre, created_at)
+                VALUES (?, ?, NOW())
             `;
             const values = [appointment.insuredId, appointment.nombre];
 
-            const result = await client.query(query, values);
-            const row = result.rows[0] as IPostgresAppointment;
+            const [result] = await connection.execute(query, values);
+            const insertId = (result as any).insertId;
 
             return {
-                insuredId: row.insured_id,
-                nombre: row.nombre,
+                insuredId: appointment.insuredId,
+                nombre: appointment.nombre,
                 countryISO: appointment.countryISO,
                 status: 'pending',
                 timestamp: new Date().toISOString(),
-                createdAt: String(row.created_at)
+                createdAt: new Date().toISOString()
             };
         } catch (error) {
             throw new InfrastructureError(
-                `Error guardando en PostgreSQL: ${(error as Error).message}`
+                `Error guardando en MySQL: ${(error as Error).message}`
             );
         } finally {
-            client.release();
+            connection.release();
         }
     }
 
     /**
-     * Obtiene todas las citas de un usuario desde PostgreSQL
+     * Obtiene todas las citas de un asegurado desde MySQL
      */
     async findAll(insuredId: string): Promise<IAppointment[]> {
-        const client: PoolClient = await this.pool.connect();
+        const connection: PoolConnection = await this.pool.getConnection();
         try {
             const query = `
                 SELECT id, insured_id, nombre, created_at, updated_at
                 FROM appointments
-                WHERE insured_id = $1
+                WHERE insured_id = ?
                 ORDER BY created_at DESC
             `;
-            const result = await client.query(query, [insuredId]);
-            
-            return result.rows.map((row: IPostgresAppointment) => ({
+            const [rows] = await connection.execute(query, [insuredId]);
+
+            return (rows as IMySQLAppointment[]).map((row) => ({
                 insuredId: row.insured_id,
                 nombre: row.nombre,
                 countryISO: '',
@@ -68,31 +67,31 @@ export class PostgresRepository implements IAppointmentRepository {
             }));
         } catch (error) {
             throw new InfrastructureError(
-                `Error consultando PostgreSQL: ${(error as Error).message}`
+                `Error consultando MySQL: ${(error as Error).message}`
             );
         } finally {
-            client.release();
+            connection.release();
         }
     }
 
     /**
-     * Encuentra una cita por ID en PostgreSQL
+     * Encuentra una cita por ID en MySQL
      */
     async findById(appointmentId: string | number): Promise<IAppointment | null> {
-        const client: PoolClient = await this.pool.connect();
+        const connection: PoolConnection = await this.pool.getConnection();
         try {
             const query = `
                 SELECT id, user_id, nombre, created_at
                 FROM appointments
-                WHERE id = $1
+                WHERE id = ?
             `;
-            const result = await client.query(query, [appointmentId]);
-            
-            if (result.rows.length === 0) {
+            const [rows] = await connection.execute(query, [appointmentId]);
+
+            if ((rows as any[]).length === 0) {
                 return null;
             }
 
-            const row = result.rows[0] as IPostgresAppointment;
+            const row = (rows as IMySQLAppointment[])[0];
             return {
                 insuredId: row.insured_id,
                 nombre: row.nombre,
@@ -103,48 +102,42 @@ export class PostgresRepository implements IAppointmentRepository {
             };
         } catch (error) {
             throw new InfrastructureError(
-                `Error consultando PostgreSQL: ${(error as Error).message}`
+                `Error consultando MySQL: ${(error as Error).message}`
             );
         } finally {
-            client.release();
+            connection.release();
         }
     }
 
     /**
-     * Actualiza una cita en PostgreSQL
+     * Actualiza una cita en MySQL
      */
     async update(appointment: Appointment): Promise<IAppointment> {
-        const client: PoolClient = await this.pool.connect();
+        const connection: PoolConnection = await this.pool.getConnection();
         try {
             const query = `
                 UPDATE appointments
-                SET nombre = $1, updated_at = NOW()
-                WHERE user_id = $2
-                RETURNING id, insured_id, nombre, created_at, updated_at
+                SET nombre = ?, updated_at = NOW()
+                WHERE insured_id = ?
             `;
             const values = [appointment.nombre, appointment.insuredId];
-            
-            const result = await client.query(query, values);
-            
-            if (result.rows.length === 0) {
-                throw new InfrastructureError('No se encontró la cita para actualizar');
-            }
 
-            const row = result.rows[0] as IPostgresAppointment;
+            await connection.execute(query, values);
+
             return {
-                insuredId: row.insured_id,
-                nombre: row.nombre,
+                insuredId: appointment.insuredId,
+                nombre: appointment.nombre,
                 countryISO: appointment.countryISO,
                 status: 'pending',
                 timestamp: new Date().toISOString(),
-                createdAt: String(row.created_at)
+                createdAt: new Date().toISOString()
             };
         } catch (error) {
             throw new InfrastructureError(
-                `Error actualizando PostgreSQL: ${(error as Error).message}`
+                `Error actualizando MySQL: ${(error as Error).message}`
             );
         } finally {
-            client.release();
+            connection.release();
         }
     }
 }

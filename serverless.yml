@@ -1,5 +1,13 @@
 org: benyaops
-service: flujo-ApDbSnsSqs8-rimac
+service: flujo-ApDbSnsSqs15-rimac
+
+build:
+  esbuild:
+    bundle: true
+    minify: false
+    external:
+      - '@aws-sdk/*'
+    packages: external # Esto asegura que librerías como 'pg' se incluyan correctamente
 
 provider:
   name: aws
@@ -10,32 +18,38 @@ provider:
       statements:
         # Permisos para DynamoDB
         - Effect: Allow
-          Action: ["dynamodb:PutItem"]
-          Resource: "arn:aws:dynamodb:us-east-1:851725266862:table/RimacTable"
+          Action:
+            - dynamodb:PutItem
+            - dynamodb:Query
+          Resource:
+            - arn:aws:dynamodb:us-east-1:851725266862:table/RimacTablev2
+            - arn:aws:dynamodb:us-east-1:851725266862:table/RimacTablev2/index/*
         # Permisos para SNS
         - Effect: Allow
           Action: ["sns:Publish"]
           Resource: !Ref TopicCentral
 
+
+
 functions:
   # 1. El Productor
   consultarDynamo:
-    handler: handler.consultarDynamo
+    handler: handlers/handler.consultarDynamo
     events:
       - httpApi:
           path: /registrar
           method: post
       # Ruta para consultar (GET)
       - httpApi:
-          path: /consultar/{userId} # deberia ser insuredId, pero esta vez lo cambiamos a userId para que sea mas generico
+          path: /consultar/{insuredId} # deberia ser insuredId, pero esta vez lo cambiamos a userId para que sea mas generico
           method: get
     environment:
       TOPIC_ARN: !Ref TopicCentral
-      TABLE_NAME: RimacTable
+      TABLE_NAME: RimacTablev2
 
   # 2. Los Workers (Consumidores)
   appointment_pe:
-    handler: workers.appointment_pe
+    handler: handlers/workers.appointment_pe
     events:
       - sqs:
           arn: !GetAtt ColaPE.Arn
@@ -46,7 +60,7 @@ functions:
       DB_PASS: "npg_5MpucoayHAF8"
 
   appointment_cl:
-    handler: workers.appointment_cl
+    handler: handlers/workers.appointment_cl
     events:
       - sqs:
           arn: !GetAtt ColaCL.Arn
@@ -66,11 +80,11 @@ resources:
     ColaPE:
       Type: AWS::SQS::Queue
       Properties:
-        QueueName: sqs_pe8
+        QueueName: sqs_pe15
     ColaCL:
       Type: AWS::SQS::Queue
       Properties:
-        QueueName: sqs_cl8
+        QueueName: sqs_cl15
 
     # Suscripciones con Filtros
     SuscripcionPE:

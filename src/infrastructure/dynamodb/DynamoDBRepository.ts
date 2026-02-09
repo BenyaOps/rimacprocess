@@ -4,9 +4,9 @@ import {
     PutCommand as PutDocCommand,
     QueryCommand as QueryDocCommand
 } from '@aws-sdk/lib-dynamodb';
-import { IAppointmentRepository } from '../../domain/repositories/IAppointmentRepository.js';
-import { Appointment } from '../../domain/entities/Appointment.js';
-import { IAppointment, InfrastructureError } from '../../shared/types.js';
+import { IAppointmentRepository } from '../../domain/repositories/IAppointmentRepository';
+import { Appointment } from '../../domain/entities/Appointment';
+import { IAppointment, InfrastructureError } from '../../shared/types';
 
 /**
  * Implementación de Repositorio con DynamoDB
@@ -42,16 +42,16 @@ export class DynamoDBRepository implements IAppointmentRepository {
     }
 
     /**
-     * Obtiene todas las citas de un usuario desde DynamoDB
+     * Obtiene todas las citas de un asegurado desde DynamoDB
      */
-    async findAll(userId: string): Promise<IAppointment[]> {
+    async findAll(insuredId: string): Promise<IAppointment[]> {
         try {
             const result = await this.docClient.send(
                 new QueryDocCommand({
                     TableName: this.tableName,
-                    KeyConditionExpression: 'userId = :id',
+                    KeyConditionExpression: 'insuredId = :id',
                     ExpressionAttributeValues: {
-                        ':id': userId
+                        ':id': insuredId
                     }
                 })
             );
@@ -69,9 +69,9 @@ export class DynamoDBRepository implements IAppointmentRepository {
      * En DynamoDB, hacer esto requeriría un scan o una índice global
      * Por ahora lanzamos error
      */
-    async findById(userId: string | number): Promise<IAppointment | null> {
+    async findById(insuredId: string | number): Promise<IAppointment | null> {
         throw new InfrastructureError(
-            'Método findById() no implementado para DynamoDB. Usar findAll() con userId.'
+            'Método findById() no implementado para DynamoDB. Usar findAll() con insuredId.'
         );
     }
 

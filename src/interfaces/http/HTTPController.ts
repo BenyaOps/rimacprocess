@@ -1,7 +1,7 @@
-import { AppointmentDTO } from '../../application/dtos/AppointmentDTO.js';
-import { RegisterAppointmentUseCase } from '../../application/usecases/RegisterAppointmentUseCase.js';
-import { ConsultAppointmentUseCase } from '../../application/usecases/ConsultAppointmentUseCase.js';
-import { IHttpEvent, ILambdaResponse, ValidationError } from '../../shared/types.js';
+import { AppointmentDTO } from '../../application/dtos/AppointmentDTO';
+import { RegisterAppointmentUseCase } from '../../application/usecases/RegisterAppointmentUseCase';
+import { ConsultAppointmentUseCase } from '../../application/usecases/ConsultAppointmentUseCase';
+import { IHttpEvent, ILambdaResponse, ValidationError } from '../../shared/types';
 
 /**
  * Controlador HTTP - Capa de Interfaces/Adapters
@@ -63,22 +63,22 @@ export class HTTPController {
     }
 
     /**
-     * GET /consultar/{userId}
+     * GET /consultar/{insuredId}
      * Consulta citas de un usuario
      */
     async consultAppointment(event: IHttpEvent): Promise<ILambdaResponse> {
         try {
-            const userId = event.pathParameters?.userId;
+            const insuredId = event.pathParameters?.insuredId;
 
-            if (!userId) {
+            if (!insuredId) {
                 return {
                     statusCode: 400,
-                    body: JSON.stringify({ error: 'userId es requerido' })
+                    body: JSON.stringify({ error: 'insuredId es requerido' })
                 };
             }
 
             // Ejecutar caso de uso
-            const result = await this.consultUseCase.execute(userId);
+            const result = await this.consultUseCase.execute(insuredId);
 
             return {
                 statusCode: 200,

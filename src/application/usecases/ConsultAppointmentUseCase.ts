@@ -1,5 +1,5 @@
-import { IAppointmentRepository } from '../../domain/repositories/IAppointmentRepository.js';
-import { IAppointment, IUseCaseResponse } from '../../shared/types.js';
+import { IAppointmentRepository } from '../../domain/repositories/IAppointmentRepository';
+import { IAppointment, IUseCaseResponse } from '../../shared/types';
 
 /**
  * Caso de Uso: Consultar Citas
@@ -14,20 +14,20 @@ export class ConsultAppointmentUseCase {
 
     /**
      * Ejecuta el caso de uso de consultar citas
-     * @param userId - ID del usuario
-     * @returns Array de citas del usuario
-     * @throws ValidationError si userId es inválido
+     * @param insuredId - ID del asegurado
+     * @returns Array de citas del asegurado
+     * @throws ValidationError si insuredId es inválido
      */
     async execute(
-        userId: string
+        insuredId: string
     ): Promise<IUseCaseResponse<IAppointment[]>> {
         // 1. Validar entrada
-        if (!userId || userId.trim().length === 0) {
-            throw new Error('userId es requerido');
+        if (!insuredId || insuredId.trim().length === 0) {
+            throw new Error('insuredId es requerido');
         }
 
         // 2. Obtener del repositorio
-        const appointments = await this.appointmentRepository.findAll(userId);
+        const appointments = await this.appointmentRepository.findAll(insuredId);
 
         // 3. Retornar resultados
         return {

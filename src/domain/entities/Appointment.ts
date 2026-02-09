@@ -3,7 +3,7 @@ import {
     AppointmentStatus,
     CountryISO,
     ValidationError
-} from '../../shared/types.js';
+} from '../../shared/types';
 
 /**
  * Appointment Entity - Capa de Dominio

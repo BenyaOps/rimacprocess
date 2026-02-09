@@ -1,5 +1,5 @@
-import { IAppointmentRepository } from '../../domain/repositories/IAppointmentRepository.js';
-import { IPostgresAppointment, IUseCaseResponse } from '../../shared/types.js';
+import { IAppointmentRepository } from '../../domain/repositories/IAppointmentRepository';
+import { IPostgresAppointment, IUseCaseResponse } from '../../shared/types';
 
 /**
  * Caso de Uso: Procesar Cita en la base de datos regional
@@ -22,13 +22,13 @@ export class ProcessAppointmentUseCase {
         appointmentData: Record<string, unknown>
     ): Promise<IUseCaseResponse<IPostgresAppointment>> {
         // 1. Validar datos
-        if (!appointmentData.userId || !appointmentData.nombre) {
-            throw new Error('userId y nombre son requeridos para procesar cita');
+        if (!appointmentData.insuredId || !appointmentData.nombre) {
+            throw new Error('insuredId y nombre son requeridos para procesar cita');
         }
 
         // 2. Guardar en base de datos regional (Postgres)
         const postgresData: IPostgresAppointment = {
-            user_id: String(appointmentData.userId),
+            insured_id: String(appointmentData.insuredId),
             nombre: String(appointmentData.nombre),
             created_at: new Date()
         };
@@ -36,7 +36,7 @@ export class ProcessAppointmentUseCase {
         // Como el repositorio espera un Appointment, adaptamos los datos
         // En un caso real, podrías crear un repositorio menos tipado o adaptar
         const result = await this.regionalRepository.save({
-            userId: String(appointmentData.userId),
+            insuredId: String(appointmentData.insuredId),
             nombre: String(appointmentData.nombre),
             countryISO: String(appointmentData.countryISO || ''),
             timestamp: new Date().toISOString(),

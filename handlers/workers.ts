@@ -6,9 +6,9 @@
  * Existen dos workers: uno para Perú y otro para Chile
  * Ambos usan la misma lógica pero se conectan a distintas BDs
  */
-import { ISQSEvent, ISQSHandlerResponse } from '../src/shared/types.js';
-import { getGlobalContainer } from '../src/di/container.js';
-import { SQSHandler } from '../src/interfaces/sqs/SQSHandler.js';
+import { ISQSEvent, ISQSHandlerResponse } from '../src/shared/types';
+import { getGlobalContainer } from '../src/di/container';
+import { SQSHandler } from '../src/interfaces/sqs/SQSHandler';
 
 /**
  * Worker for Perú

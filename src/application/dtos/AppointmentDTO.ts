@@ -1,4 +1,4 @@
-import { ICreateAppointmentInput, ValidationError } from '../../shared/types.js';
+import { ICreateAppointmentInput, ValidationError } from '../../shared/types';
 
 /**
  * Data Transfer Object para Appointment - Capa de Aplicación
@@ -24,8 +24,8 @@ export class AppointmentDTO implements ICreateAppointmentInput {
      * @throws ValidationError si no es válido
      */
     public validate(): boolean {
-        if (!this.userId || this.userId.trim().length === 0) {
-            throw new ValidationError('userId es requerido');
+        if (!this.insuredId || this.insuredId.trim().length === 0) {
+            throw new ValidationError('insuredId es requerido');
         }
         if (!this.nombre || this.nombre.trim().length === 0) {
             throw new ValidationError('nombre es requerido');

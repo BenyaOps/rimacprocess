@@ -1,5 +1,5 @@
-import { ProcessAppointmentUseCase } from '../../application/usecases/ProcessAppointmentUseCase.js';
-import { ISQSEvent, ISNSMessageFromSQS, ISQSHandlerResponse } from '../../shared/types.js';
+import { ProcessAppointmentUseCase } from '../../application/usecases/ProcessAppointmentUseCase';
+import { ISQSEvent, ISNSMessageFromSQS, ISQSHandlerResponse } from '../../shared/types';
 
 /**
  * Manejador SQS - Capa de Interfaces/Adapters

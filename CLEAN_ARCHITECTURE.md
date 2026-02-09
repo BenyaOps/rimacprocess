@@ -24,6 +24,8 @@ src/
 │   │   └── DynamoDBRepository.js     # Implementación DynamoDB
 │   ├── postgres/
 │   │   └── PostgresRepository.js     # Implementación PostgreSQL
+│   ├── mysql/
+│   │   └── MySQLRepository.js     # Implementación MySQL
 │   ├── sns/
 │   │   └── SNSPublisher.js           # Implementación SNS
 │   └── config/

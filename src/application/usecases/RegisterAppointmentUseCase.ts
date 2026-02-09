@@ -1,8 +1,8 @@
-import { Appointment } from '../../domain/entities/Appointment.js';
-import { IAppointmentRepository } from '../../domain/repositories/IAppointmentRepository.js';
-import { IPublishRepository } from '../../domain/repositories/IPublishRepository.js';
-import { AppointmentDTO } from '../dtos/AppointmentDTO.js';
-import { IAppointment, IUseCaseResponse } from '../../shared/types.js';
+import { Appointment } from '../../domain/entities/Appointment';
+import { IAppointmentRepository } from '../../domain/repositories/IAppointmentRepository';
+import { IPublishRepository } from '../../domain/repositories/IPublishRepository';
+import { AppointmentDTO } from '../dtos/AppointmentDTO';
+import { IAppointment, IUseCaseResponse } from '../../shared/types';
 
 /**
  * Caso de Uso: Registrar una Cita

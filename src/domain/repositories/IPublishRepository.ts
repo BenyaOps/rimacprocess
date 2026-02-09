@@ -1,4 +1,4 @@
-import { IMessageAttributes } from '../../shared/types.js';
+import { IMessageAttributes } from '../../shared/types';
 
 /**
  * Interface para Repositorio de Publicación - Capa de Dominio

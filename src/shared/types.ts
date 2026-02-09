@@ -21,7 +21,7 @@ export type CountryISO = 'PE' | 'CL' | string;
  * Interfaz para una Cita
  */
 export interface IAppointment {
-    userId: string;
+    userId?: string;
     nombre: string;
     countryISO: CountryISO;
     insuredId?: string;
@@ -59,6 +59,10 @@ export interface IUseCaseResponse<T = unknown> {
  * Evento HTTP de AWS Lambda (API Gateway)
  */
 export interface IHttpEvent {
+    httpMethod?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
+    path?: string;
+    headers?: Record<string, string>;
+    queryStringParameters?: Record<string, string | undefined>;
     body: string;
     pathParameters: Record<string, string | undefined>;
     requestContext: {
@@ -80,6 +84,14 @@ export interface ISQSEvent {
         attributes: Record<string, unknown>;
         messageAttributes: Record<string, unknown>;
     }>;
+}
+
+export interface ISQSRecord {
+    messageId: string;
+    receiptHandle: string;
+    body: string;
+    attributes: Record<string, unknown>;
+    messageAttributes: Record<string, unknown>;
 }
 
 /**
@@ -123,7 +135,18 @@ export interface ISQSHandlerResponse {
  */
 export interface IPostgresAppointment {
     id?: number;
-    user_id: string;
+    insured_id: string;
+    nombre: string;
+    created_at: Date | string;
+    updated_at?: Date | string;
+}
+
+/**
+ * Interfaz para una fila en MySQL
+ */
+export interface IMySQLAppointment {
+    id?: number;
+    insured_id: string;
     nombre: string;
     created_at: Date | string;
     updated_at?: Date | string;

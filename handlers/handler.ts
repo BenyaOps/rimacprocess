@@ -5,12 +5,12 @@
  * Usa el contenedor DI para obtener dependencias
  * Delega la lógica al controlador HTTP
  */
-import { IHttpEvent, ILambdaResponse } from '../src/shared/types.js';
-import { getGlobalContainer } from '../src/di/container.js';
-import { HTTPController } from '../src/interfaces/http/HTTPController.js';
+import { IHttpEvent, ILambdaResponse } from '../src/shared/types';
+import { getGlobalContainer } from '../src/di/container';
+import { HTTPController } from '../src/interfaces/http/HTTPController';
 
 /**
- * Handler para POST /registrar y GET /consultar/{userId}
+ * Handler para POST /registrar y GET /consultar/{insuredId}
  */
 export const consultarDynamo = async (
     event: IHttpEvent

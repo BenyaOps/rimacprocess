@@ -1,14 +1,14 @@
 import { Pool } from 'pg';
-import { RegisterAppointmentUseCase } from '../application/usecases/RegisterAppointmentUseCase.js';
-import { ConsultAppointmentUseCase } from '../application/usecases/ConsultAppointmentUseCase.js';
-import { ProcessAppointmentUseCase } from '../application/usecases/ProcessAppointmentUseCase.js';
-import { DynamoDBRepository } from '../infrastructure/dynamodb/DynamoDBRepository.js';
-import { PostgresRepository } from '../infrastructure/postgres/PostgresRepository.js';
-import { SNSPublisher } from '../infrastructure/sns/SNSPublisher.js';
-import { HTTPController } from '../interfaces/http/HTTPController.js';
-import { SQSHandler } from '../interfaces/sqs/SQSHandler.js';
-import { getPostgresPool } from '../infrastructure/config/database.js';
-import { IDatabaseConfig } from '../shared/types.js';
+import { RegisterAppointmentUseCase } from '../application/usecases/RegisterAppointmentUseCase';
+import { ConsultAppointmentUseCase } from '../application/usecases/ConsultAppointmentUseCase';
+import { ProcessAppointmentUseCase } from '../application/usecases/ProcessAppointmentUseCase';
+import { DynamoDBRepository } from '../infrastructure/dynamodb/DynamoDBRepository';
+import { PostgresRepository } from '../infrastructure/postgres/PostgresRepository';
+import { SNSPublisher } from '../infrastructure/sns/SNSPublisher';
+import { HTTPController } from '../interfaces/http/HTTPController';
+import { SQSHandler } from '../interfaces/sqs/SQSHandler';
+import { getPostgresPool } from '../infrastructure/config/database';
+import { IDatabaseConfig } from '../shared/types';
 
 /**
  * Contenedor de Inyección de Dependencias

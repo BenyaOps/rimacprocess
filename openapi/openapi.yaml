@@ -1,0 +1,150 @@
+openapi: 3.0.3
+info:
+  title: Servicio RIMAC - API
+  version: 1.0.0
+  description: |
+    Documentación mínima OpenAPI para los endpoints públicos del servicio.
+servers:
+  - url: https://api.example.com
+    description: Production server (replace with your endpoint)
+paths:
+  /appointments:
+    get:
+      summary: Obtener citas
+      description: Devuelve una lista de citas o una sola cita si se especifica `id`.
+      parameters:
+        - name: id
+          in: query
+          description: ID de la cita (opcional)
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de citas o una cita encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentListResponse'
+        '400':
+          description: Petición inválida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+    post:
+      summary: Registrar nueva cita
+      description: Crea una nueva cita en el sistema.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAppointmentRequest'
+      responses:
+        '201':
+          description: Cita creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AppointmentResponse'
+        '400':
+          description: Datos inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+components:
+  schemas:
+    Appointment:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        name:
+          type: string
+          example: "Juan Pérez"
+        email:
+          type: string
+          format: email
+          example: "juan.perez@example.com"
+        phone:
+          type: string
+          example: "+56912345678"
+        date:
+          type: string
+          format: date-time
+          example: "2026-02-10T10:30:00Z"
+        countryISO:
+          type: string
+          example: "PE"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2026-02-09T12:00:00Z"
+      required:
+        - id
+        - name
+        - date
+
+    CreateAppointmentRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        date:
+          type: string
+          format: date-time
+        countryISO:
+          type: string
+      required:
+        - name
+        - date
+        - countryISO
+
+    AppointmentResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          $ref: '#/components/schemas/Appointment'
+
+    AppointmentListResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Appointment'
+
+    Error:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        code:
+          type: integer
+          example: 400
+        message:
+          type: string
+          example: "Invalid request"
+
+tags:
+  - name: Appointments
+    description: Operaciones relacionadas con citas
+
+x-info:
+  maintainer: equipo-backend@ejemplo.com
