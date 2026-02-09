@@ -31,7 +31,7 @@ El flujo de datos está diseñado bajo el patrón de **Fan-out** con filtrado de
 
 1. **Clonar el repositorio:**
    ```bash
-   git clone [https://github.com/BenyaOps/agendar-rimac-api.git](https://github.com/BenyaOps/agendar-rimac-api.git)
+   git clone https://github.com/BenyaOps/agendar-rimac-api.git
    cd agendar-rimac-api
 
 ---
@@ -69,7 +69,7 @@ Consulta registros históricos desde la tabla de auditoría en DynamoDB.
 ### Test de Registro:
 
 ```bash
-curl -X POST https://m2i02b459j.execute-api.us-east-1.amazonaws.com/registrar](https://m2i02b459j.execute-api.us-east-1.amazonaws.com/registrar) \
+curl -X POST https://m2i02b459j.execute-api.us-east-1.amazonaws.com/registrar \
      -H "Content-Type: application/json" \
      -d '{"insuredId": "INS-001", "scheduleId": 1, "countryISO": "pe", "userId":"user_01", "nombre": "Brais"}'
 ```
@@ -78,3 +78,9 @@ curl -X POST https://m2i02b459j.execute-api.us-east-1.amazonaws.com/registrar](h
 ## 🛡️ IAM & Seguridad
 
 El proyecto utiliza el principio de Privilegio Mínimo. Los permisos están limitados a las acciones dynamodb:PutItem, dynamodb:Query y sns:Publish sobre los recursos específicos del stack.
+
+---
+
+## Perspectiva Personal
+
+La prueba técnica ha incluido múltiples servicios de AWS y tecnologías serverless, lo cual es muy impactante y entretenido poder integrar para lograr, en base al Well Architected Framework, alta disponibilidad, reducción de costos y optimización operativa.
