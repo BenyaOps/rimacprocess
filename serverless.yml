@@ -29,8 +29,6 @@ provider:
           Action: ["sns:Publish"]
           Resource: !Ref TopicCentral
 
-
-
 functions:
   # 1. El Productor
   consultarDynamo:

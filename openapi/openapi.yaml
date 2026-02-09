@@ -8,52 +8,65 @@ servers:
   - url: https://api.example.com
     description: Production server (replace with your endpoint)
 paths:
-  /appointments:
-    get:
-      summary: Obtener citas
-      description: Devuelve una lista de citas o una sola cita si se especifica `id`.
-      parameters:
-        - name: id
-          in: query
-          description: ID de la cita (opcional)
-          required: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Lista de citas o una cita encontrada
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AppointmentListResponse'
-        '400':
-          description: Petición inválida
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+  /registrar:
     post:
-      summary: Registrar nueva cita
-      description: Crea una nueva cita en el sistema.
+      summary: Registrar una nueva cita
+      description: Guarda la información en DynamoDB y dispara el flujo hacia SNS/SQS.
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/CreateAppointmentRequest'
+              type: object
+              required: [insuredId, scheduleId, countryISO, userId, nombre]
+              properties:
+                insuredId:
+                  type: string
+                  example: "INS-163"
+                scheduleId:
+                  type: integer
+                  example: 63
+                countryISO:
+                  type: string
+                  enum: [pe, cl]
+                  example: "pe"
+                userId:
+                  type: string
+                  example: "rimac_user63"
+                nombre:
+                  type: string
+                  example: "testnombre63"
       responses:
         '201':
-          description: Cita creada
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AppointmentResponse'
+          description: Registro exitoso y evento enviado a SNS.
         '400':
-          description: Datos inválidos
+          description: Datos de entrada inválidos.
+  /consultar/{insuredId}:
+    get:
+      summary: Consultar registros de un asegurado
+      parameters:
+        - name: insuredId
+          in: path
+          required: true
+          description: ID único del asegurado en el sistema.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista de registros encontrados en DynamoDB.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                type: object
+                properties:
+                  total:
+                    type: integer
+                  items:
+                    type: array
+                    items:
+                      type: object
+        '404':
+          description: Asegurado no encontrado.
 
 components:
   schemas:
@@ -147,4 +160,4 @@ tags:
     description: Operaciones relacionadas con citas
 
 x-info:
-  maintainer: equipo-backend@ejemplo.com
+  maintainer: benyaroot@gmail.com
