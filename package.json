@@ -1,18 +1,21 @@
 {
   "name": "servicio_rimac",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "type": "module",
-  "description": "Servicio RIMAC con Clean Architecture",
-  "main": "handler_new.mjs",
+  "description": "Servicio RIMAC con Clean Architecture y TypeScript",
+  "main": "dist/handlers/http.js",
   "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "deploy": "serverless deploy"
+    "deploy": "npm run build && serverless deploy",
+    "lint": "tsc --noEmit"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/BenyaOps/rimacprocess.git"
   },
-  "keywords": ["serverless", "aws", "clean-architecture"],
+  "keywords": ["serverless", "aws", "clean-architecture", "typescript"],
   "author": "Benjamin Ponce",
   "license": "ISC",
   "bugs": {
@@ -25,5 +28,9 @@
     "@aws-sdk/lib-dynamodb": "^3.580.0",
     "pg": "^8.18.0"
   },
-  "devDependencies": {}
+  "devDependencies": {
+    "@types/node": "^20.10.6",
+    "@types/pg": "^8.11.2",
+    "typescript": "^5.3.3"
+  }
 }
